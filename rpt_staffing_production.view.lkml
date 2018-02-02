@@ -2,7 +2,34 @@ view: rpt_staffing_production {
   sql_table_name: dbo.RPT_Staffing_Production ;;
 
   ######## Parameters ########
-
+  parameter: coverage {
+    type: number
+    allowed_value: {label: "75%" value: "0.75"}
+    allowed_value: {label: "76%" value: "0.76"}
+    allowed_value: {label: "77%" value: "0.77"}
+    allowed_value: {label: "78%" value: "0.78"}
+    allowed_value: {label: "79%" value: "0.79"}
+    allowed_value: {label: "80%" value: "0.80"}
+    allowed_value: {label: "81%" value: "0.81"}
+    allowed_value: {label: "82%" value: "0.82"}
+    allowed_value: {label: "83%" value: "0.83"}
+    allowed_value: {label: "84%" value: "0.84"}
+    allowed_value: {label: "85%" value: "0.85"}
+    allowed_value: {label: "86%" value: "0.86"}
+    allowed_value: {label: "87%" value: "0.87"}
+    allowed_value: {label: "88%" value: "0.88"}
+    allowed_value: {label: "89%" value: "0.89"}
+    allowed_value: {label: "90%" value: "0.90"}
+    allowed_value: {label: "91%" value: "0.91"}
+    allowed_value: {label: "92%" value: "0.92"}
+    allowed_value: {label: "93%" value: "0.93"}
+    allowed_value: {label: "94%" value: "0.94"}
+    allowed_value: {label: "95%" value: "0.95"}
+    allowed_value: {label: "96%" value: "0.96"}
+    allowed_value: {label: "97%" value: "0.97"}
+    allowed_value: {label: "98%" value: "0.98"}
+    allowed_value: {label: "99%" value: "0.99"}
+  }
 
 
 
