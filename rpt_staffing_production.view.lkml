@@ -1,6 +1,13 @@
 view: rpt_staffing_production {
   sql_table_name: dbo.RPT_Staffing_Production ;;
 
+  ######## Parameters ########
+
+
+
+
+  ######## Dimensions ########
+
   dimension: id {
     type: number
     sql: ${TABLE}."#" ;;
@@ -145,6 +152,8 @@ view: rpt_staffing_production {
     type: string
     sql: ${TABLE}."Support Fx Identifier" ;;
   }
+
+  ######## Measures ########
 
   measure: count {
     type: count
