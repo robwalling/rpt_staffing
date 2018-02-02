@@ -41,6 +41,12 @@ view: rpt_staffing_production {
     sql: ${TABLE}."#" ;;
   }
 
+  dimension_group: t_activity {
+    type: time
+    timeframes: [year, quarter, month, week, date]
+    sql: dateadd(day, ${day_of_operations}, ${rpt_staffing_schedule.start_date}) ;;
+  }
+
   dimension: activity_l4 {
     type: string
     sql: ${TABLE}."Activity (L4)" ;;
