@@ -2,7 +2,8 @@ view: rpt_staffing_production {
   sql_table_name: dbo.RPT_Staffing_Production ;;
 
   ######## Parameters ########
-  parameter: coverage {
+  parameter: param_coverage {
+    label: "Coverage"
     type: number
     allowed_value: {label: "75%" value: "0.75"}
     allowed_value: {label: "76%" value: "0.76"}
