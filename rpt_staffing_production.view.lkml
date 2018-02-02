@@ -178,6 +178,7 @@ view: rpt_staffing_production {
   }
 
   dimension: sum_of_personhours {
+    hidden: yes
     type: number
     sql: ${TABLE}."Sum of Person-hours" ;;
   }
@@ -193,4 +194,23 @@ view: rpt_staffing_production {
     type: count
     drill_fields: []
   }
+
+  measure: total_days_of_operations {
+    type: sum
+    sql: ${day_of_operations} ;;
+    value_format_name: decimal_0
+  }
+
+  measure: total_person_hours {
+    type: sum
+    sql: ${sum_of_personhours} ;;
+    value_format_name: decimal_0
+  }
+
+
+
+
+
+
+
 }
