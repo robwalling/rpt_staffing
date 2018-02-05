@@ -207,7 +207,11 @@ view: rpt_staffing_production {
     value_format_name: decimal_0
   }
 
-
+  measure: total_average_of_idle_time {
+    type: sum
+    sql: ${average_of_idle_time} ;;
+    value_format_name: decimal_0
+  }
 
 
 
