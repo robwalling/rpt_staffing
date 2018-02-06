@@ -143,7 +143,7 @@ view: rpt_staffing_resource_hrs {
     sql: ${TABLE}."HC (Opers# Only)" ;;
   }
 
-  dimension: join_identifier__resources {
+  dimension: join_identifier_resources {
     type: string
     sql: ${TABLE}."Join Identifier - Resources" ;;
   }
@@ -153,12 +153,12 @@ view: rpt_staffing_resource_hrs {
     sql: ${TABLE}."Meeting Time" ;;
   }
 
-  dimension: net_hours__month {
+  dimension: net_hours_month {
     type: number
     sql: ${TABLE}."Net Hours / Month" ;;
   }
 
-  dimension: net_hours__year {
+  dimension: net_hours_year {
     type: number
     sql: ${TABLE}."Net hours / Year" ;;
   }
@@ -168,7 +168,7 @@ view: rpt_staffing_resource_hrs {
     sql: ${TABLE}."Net Working Weeks/Year" ;;
   }
 
-  dimension: shift_duration_ {
+  dimension: shift_duration {
     type: number
     sql: ${TABLE}."Shift Duration " ;;
   }
@@ -198,22 +198,25 @@ view: rpt_staffing_resource_hrs {
     sql: ${TABLE}.Training ;;
   }
 
-  dimension: vacation__holidays {
+  dimension: vacation_holidays {
     type: number
     sql: ${TABLE}."Vacation + holidays" ;;
   }
 
-  dimension: working_days__month {
+  dimension: working_days_month {
+    label: "Working Days / Month"
     type: number
     sql: ${TABLE}."Working days / Month" ;;
   }
 
-  dimension: working_days__year {
+  dimension: working_days_year {
+    label: "Working Days / Year"
     type: number
     sql: ${TABLE}."Working days / Year" ;;
   }
 
-  dimension: working_daysweek {
+  dimension: working_days_week {
+    label: "Working Days / Week"
     type: number
     sql: ${TABLE}."Working Days/Week" ;;
   }
@@ -227,55 +230,55 @@ view: rpt_staffing_resource_hrs {
   measure: total_working_days_month {
     label: "Working Days / Month"
     type: sum
-    sql: ${working_days__month} ;;
+    sql: ${working_days_month} ;;
   }
 
   measure: v_productive_shift_hours {
-    type: sum
-    sql: ((${shift_duration_} -
+    type: number
+    sql: ((${total_shift_duration} -
             (${v_gowning_hours} + ${v_break_hours} + ${v_meeting_hours} + ${v_training_hours})) *
-          (${working_days__year} - ${v_vacations}) / ${working_days__year}) ;;
+          (${total_working_days_year} - ${v_vacations}) / ${total_working_days_year}) ;;
     value_format_name: decimal_0
   }
 
   measure: total_shift_duration {
     type: sum
-    sql: ${shift_duration_} ;;
+    sql: ${shift_duration} ;;
     value_format_name: decimal_0
   }
 
   measure: v_gowning_hours {
     type: sum
-    sql: ${gowning_time} * (1+${param_gowning}) ;;
+    sql: ${gowning_time} * (1+ {% parameter param_gowning %}) ;;
     value_format_name: decimal_0
   }
 
   measure: v_break_hours {
     type: sum
-    sql: ${break_time} * (1+${param_break}) ;;
+    sql: ${break_time} * (1+ {% parameter param_break %}) ;;
     value_format_name: decimal_0
   }
 
   measure: v_meeting_hours {
     type: sum
-    sql: ${meeting_time} * (1+${param_meeting}) ;;
+    sql: ${meeting_time} * (1+ {% parameter param_meeting %}) ;;
     value_format_name: decimal_0
   }
 
   measure: v_training_hours {
     type: sum
-    sql: ${training} * (1+${param_training}) ;;
+    sql: ${training} * (1+ {% parameter param_training %}) ;;
     value_format_name: decimal_0
   }
 
   measure: total_working_days_year {
     type: sum
-    sql: ${working_days__year} ;;
+    sql: ${working_days_year} ;;
   }
 
   measure: v_vacations {
     type: sum
-    sql: ${vacation__holidays} * (1+${param_vacations}) ;;
+    sql: ${vacation_holidays} * (1+ {% parameter param_vacations %}) ;;
     value_format_name: decimal_0
   }
 
@@ -306,7 +309,27 @@ view: rpt_staffing_resource_hrs {
   measure: total_vacation_holidays {
     label: "Total Vacation + Holidays"
     type: sum
-    sql: ${vacation__holidays} ;;
+    sql: ${vacation_holidays} ;;
+    value_format_name: decimal_0
+  }
+
+  measure: avg_staff_efficiency_future {
+    label: "AVG(Staff Efficiency - Future)"
+    type: number
+    sql: ${v_productive_shift_hours} / ${total_shift_duration} ;;
+  }
+
+  measure: avg_staff_efficiency_current {
+    label: "AVG(Staff Efficiency - Current)"
+    type: number
+    sql: ${d_productive_shift_hours} / ${total_shift_duration} ;;
+  }
+
+  measure: d_productive_shift_hours {
+    type: number
+    sql: ((${total_shift_duration} -
+            (${total_break_time} + ${total_meeting_time} + ${total_gowning_time} + ${total_training})) *
+          (${total_working_days_year} - ${total_vacation_holidays})) / ${total_working_days_year} ;;
     value_format_name: decimal_0
   }
 

@@ -1,6 +1,34 @@
 view: rpt_staffing_deviation_new {
   sql_table_name: dbo.RPT_Staffing_Deviation_New ;;
 
+###### Parameters ######
+  parameter: param_deviations {
+    label: "Deviations"
+    type: number
+    allowed_value: {label: "-100%" value: "-1.00"}
+    allowed_value: {label: "-90%" value: "-0.90"}
+    allowed_value: {label: "-80%" value: "-0.80"}
+    allowed_value: {label: "-70%" value: "-0.70"}
+    allowed_value: {label: "-60%" value: "-0.60"}
+    allowed_value: {label: "-50%" value: "-0.50"}
+    allowed_value: {label: "-40%" value: "-0.40"}
+    allowed_value: {label: "-30%" value: "-0.30"}
+    allowed_value: {label: "-20%" value: "-0.20"}
+    allowed_value: {label: "-10%" value: "-0.10"}
+    allowed_value: {label: "0%" value: "0.00"}
+    allowed_value: {label: "10%" value: "0.10"}
+    allowed_value: {label: "20%" value: "0.20"}
+    allowed_value: {label: "30%" value: "0.30"}
+    allowed_value: {label: "40%" value: "0.40"}
+    allowed_value: {label: "50%" value: "0.50"}
+    allowed_value: {label: "60%" value: "0.60"}
+    allowed_value: {label: "70%" value: "0.70"}
+    allowed_value: {label: "80%" value: "0.80"}
+    allowed_value: {label: "90%" value: "0.90"}
+    allowed_value: {label: "100%" value: "1.00"}
+  }
+
+###### Dimensions ######
   dimension: asset {
     type: string
     sql: ${TABLE}.Asset ;;
@@ -66,8 +94,14 @@ view: rpt_staffing_deviation_new {
     sql: ${TABLE}."Sum_of_Person-hours" ;;
   }
 
+###### Measures ######
   measure: count {
     type: count
     drill_fields: []
+  }
+
+  measure: total_deviation_count {
+    type: sum
+    sql: ${deviation_count} ;;
   }
 }

@@ -19,8 +19,8 @@ explore: rpt_staffing_production {
   }
 
   join: rpt_staffing_resource_hrs {
-    sql_on: ${rpt_staffing_production.join_identifier__resources}
-      = ${rpt_staffing_resource_hrs.join_identifier__resources};;
+    sql_on: ${rpt_staffing_production.join_identifier_resources}
+      = ${rpt_staffing_resource_hrs.join_identifier_resources} ;;
     type: left_outer
     relationship: many_to_one
   }
