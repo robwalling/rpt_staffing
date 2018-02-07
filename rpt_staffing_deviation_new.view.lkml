@@ -1,4 +1,4 @@
-view: rpt_staffing_deviation_new {
+view: rpt_staffing_deviation {
   sql_table_name: dbo.RPT_Staffing_Deviation_New ;;
 
 ###### Parameters ######

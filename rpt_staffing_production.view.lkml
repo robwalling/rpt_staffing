@@ -4,6 +4,7 @@ view: rpt_staffing_production {
   ######## Parameters ########
   parameter: param_coverage {
     label: "Coverage"
+    view_label: "Parameters"
     type: number
     allowed_value: {label: "75%" value: "0.75"}
     allowed_value: {label: "76%" value: "0.76"}
@@ -34,6 +35,7 @@ view: rpt_staffing_production {
 
   parameter: param_sub_lot {
     label: "Sub-lot"
+    view_label: "Parameters"
     type: number
     allowed_value: {label: "-100%" value: "-1.00"}
     allowed_value: {label: "-90%" value: "-0.90"}
@@ -60,6 +62,7 @@ view: rpt_staffing_production {
 
   parameter: param_rework_rate {
     label: "Incremental Rate of Rework Rate"
+    view_label: "Parameters"
     type: number
     allowed_value: {label: "-100%" value: "-1.00"}
     allowed_value: {label: "-90%" value: "-0.90"}
@@ -86,6 +89,7 @@ view: rpt_staffing_production {
 
   parameter: param_idle_time {
     label: "Idle Time"
+    view_label: "Parameters"
     type: number
     allowed_value: {label: "-100%" value: "-1.00"}
     allowed_value: {label: "-90%" value: "-0.90"}
@@ -107,6 +111,114 @@ view: rpt_staffing_production {
     allowed_value: {label: "70%" value: "0.70"}
     allowed_value: {label: "80%" value: "0.80"}
     allowed_value: {label: "90%" value: "0.90"}
+    allowed_value: {label: "100%" value: "1.00"}
+  }
+
+  parameter: param_reactive_maintenance {
+    label: "Reactive Maintenance per Lot"
+    view_label: "Parameters"
+    type: number
+    allowed_value: {label: "0%" value: "0.00"}
+    allowed_value: {label: "5%" value: "0.05"}
+    allowed_value: {label: "10%" value: "0.10"}
+    allowed_value: {label: "15%" value: "0.15"}
+    allowed_value: {label: "20%" value: "0.20"}
+    allowed_value: {label: "25%" value: "0.25"}
+    allowed_value: {label: "30%" value: "0.30"}
+    allowed_value: {label: "35%" value: "0.35"}
+    allowed_value: {label: "40%" value: "0.40"}
+    allowed_value: {label: "45%" value: "0.45"}
+    allowed_value: {label: "50%" value: "0.50"}
+    allowed_value: {label: "55%" value: "0.55"}
+    allowed_value: {label: "60%" value: "0.60"}
+    allowed_value: {label: "65%" value: "0.65"}
+    allowed_value: {label: "70%" value: "0.70"}
+    allowed_value: {label: "75%" value: "0.75"}
+    allowed_value: {label: "80%" value: "0.80"}
+    allowed_value: {label: "85%" value: "0.85"}
+    allowed_value: {label: "90%" value: "0.90"}
+    allowed_value: {label: "95%" value: "0.95"}
+    allowed_value: {label: "100%" value: "1.00"}
+  }
+
+  parameter: param_returned_excess_rm {
+    label: "Returned Excess RM per Lot"
+    view_label: "Parameters"
+    type: number
+    allowed_value: {label: "0%" value: "0.00"}
+    allowed_value: {label: "5%" value: "0.05"}
+    allowed_value: {label: "10%" value: "0.10"}
+    allowed_value: {label: "15%" value: "0.15"}
+    allowed_value: {label: "20%" value: "0.20"}
+    allowed_value: {label: "25%" value: "0.25"}
+    allowed_value: {label: "30%" value: "0.30"}
+    allowed_value: {label: "35%" value: "0.35"}
+    allowed_value: {label: "40%" value: "0.40"}
+    allowed_value: {label: "45%" value: "0.45"}
+    allowed_value: {label: "50%" value: "0.50"}
+    allowed_value: {label: "55%" value: "0.55"}
+    allowed_value: {label: "60%" value: "0.60"}
+    allowed_value: {label: "65%" value: "0.65"}
+    allowed_value: {label: "70%" value: "0.70"}
+    allowed_value: {label: "75%" value: "0.75"}
+    allowed_value: {label: "80%" value: "0.80"}
+    allowed_value: {label: "85%" value: "0.85"}
+    allowed_value: {label: "90%" value: "0.90"}
+    allowed_value: {label: "95%" value: "0.95"}
+    allowed_value: {label: "100%" value: "1.00"}
+  }
+
+  parameter: param_change_control {
+    label: "Change Control"
+    view_label: "Parameters"
+    type: number
+    allowed_value: {label: "-100%" value: "-1.00"}
+    allowed_value: {label: "-90%" value: "-0.90"}
+    allowed_value: {label: "-80%" value: "-0.80"}
+    allowed_value: {label: "-70%" value: "-0.70"}
+    allowed_value: {label: "-60%" value: "-0.60"}
+    allowed_value: {label: "-50%" value: "-0.50"}
+    allowed_value: {label: "-40%" value: "-0.40"}
+    allowed_value: {label: "-30%" value: "-0.30"}
+    allowed_value: {label: "-20%" value: "-0.20"}
+    allowed_value: {label: "-10%" value: "-0.10"}
+    allowed_value: {label: "0%" value: "0.00"}
+    allowed_value: {label: "10%" value: "0.10"}
+    allowed_value: {label: "20%" value: "0.20"}
+    allowed_value: {label: "30%" value: "0.30"}
+    allowed_value: {label: "40%" value: "0.40"}
+    allowed_value: {label: "50%" value: "0.50"}
+    allowed_value: {label: "60%" value: "0.60"}
+    allowed_value: {label: "70%" value: "0.70"}
+    allowed_value: {label: "80%" value: "0.80"}
+    allowed_value: {label: "90%" value: "0.90"}
+    allowed_value: {label: "100%" value: "1.00"}
+  }
+
+  parameter: param_electronic_br {
+    label: "Electronic BR"
+    view_label: "Parameters"
+    type: number
+    allowed_value: {label: "0%" value: "0.00"}
+    allowed_value: {label: "5%" value: "0.05"}
+    allowed_value: {label: "10%" value: "0.10"}
+    allowed_value: {label: "15%" value: "0.15"}
+    allowed_value: {label: "20%" value: "0.20"}
+    allowed_value: {label: "25%" value: "0.25"}
+    allowed_value: {label: "30%" value: "0.30"}
+    allowed_value: {label: "35%" value: "0.35"}
+    allowed_value: {label: "40%" value: "0.40"}
+    allowed_value: {label: "45%" value: "0.45"}
+    allowed_value: {label: "50%" value: "0.50"}
+    allowed_value: {label: "55%" value: "0.55"}
+    allowed_value: {label: "60%" value: "0.60"}
+    allowed_value: {label: "65%" value: "0.65"}
+    allowed_value: {label: "70%" value: "0.70"}
+    allowed_value: {label: "75%" value: "0.75"}
+    allowed_value: {label: "80%" value: "0.80"}
+    allowed_value: {label: "85%" value: "0.85"}
+    allowed_value: {label: "90%" value: "0.90"}
+    allowed_value: {label: "95%" value: "0.95"}
     allowed_value: {label: "100%" value: "1.00"}
   }
 
@@ -201,6 +313,24 @@ view: rpt_staffing_production {
   dimension: parameter {
     type: string
     sql: ${TABLE}.Parameter ;;
+  }
+
+  dimension: parameter_control {
+    type: number
+    sql: CASE
+          WHEN ${parameter} = 'Reactive Maintenance' THEN 1+{% parameter param_reactive_maintenance %}
+          WHEN ${parameter} = 'Return Excess RM' THEN 1+{% parameter param_returned_excess_rm %}
+          WHEN ${parameter} = 'Rework Rate' THEN IF(NOT ISNULL(${sublot_multiplier})
+                                                  , IF(${sublot}='Sub-lot', ${sublot_multiplier}*(1+${sublot})
+                                                    ,${sublot_multiplier})
+                                                  ,1)
+          WHEN ${parameter} = 'Deviations' THEN ${rpt_staffing_deviation.deviation_count}*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
+          WHEN ${parameter} = 'Change Control' THEN (1+{% parameter param_change_control %})
+          WHEN ${parameter} = 'eBR' THEN {% parameter param_electronic_br %}
+          WHEN ${parameter} = 'Paper' THEN 1-{% parameter param_returned_excess_rm %}
+          ELSE 1
+        END
+          ;;
   }
 
   dimension: process__br {
@@ -302,7 +432,11 @@ view: rpt_staffing_production {
     value_format_name: decimal_0
   }
 
-
+  measure: t_idle_time_calculation {
+    type: number
+    sql: IFNULL(${total_average_of_idle_time}, 0)*(1+ {% parameter param_idle_time %});;
+    value_format_name: decimal_0
+  }
 
 
 
