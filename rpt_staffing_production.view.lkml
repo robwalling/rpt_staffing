@@ -464,6 +464,12 @@ view: rpt_staffing_production {
     value_format_name: decimal_0
   }
 
+  measure: t_rework_work_calculation {
+    type: number
+    sql: IFNULL(${total_average_of_rework_rate}, 0)*(1+ {% parameter param_rework_rate %});;
+    value_format_name: decimal_0
+  }
+
   measure: t_idle_time_calculation {
     type: number
     sql: IFNULL(${total_average_of_idle_time}, 0)*(1+ {% parameter param_idle_time %});;
