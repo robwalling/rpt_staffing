@@ -112,6 +112,13 @@ view: rpt_staffing_resource_hrs {
     allowed_value: {label: "50%" value: "0.50"}
   }
 
+  parameter: param_soc {
+    label: "SOC"
+    type: string
+    allowed_value: {label: "Sups. by SOC" value: "Sups. by SOC"}
+    allowed_value: {label: "Sups. by Shift" value: "Sups. by Shift"}
+  }
+
 ###### Dimensions ######
   dimension: number_of_shifts {
     type: number
@@ -145,6 +152,7 @@ view: rpt_staffing_resource_hrs {
 
   dimension: join_identifier_resources {
     type: string
+    primary_key: yes                # Added by Rebecca
     sql: ${TABLE}."Join Identifier - Resources" ;;
   }
 
@@ -154,16 +162,19 @@ view: rpt_staffing_resource_hrs {
   }
 
   dimension: net_hours_month {
+    label: "Net Hours/Month"
     type: number
     sql: ${TABLE}."Net Hours / Month" ;;
   }
 
   dimension: net_hours_year {
+    label: "Net Hours/Year"
     type: number
     sql: ${TABLE}."Net hours / Year" ;;
   }
 
   dimension: net_working_weeksyear {
+    label: "Net Working Weeks/Year"
     type: number
     sql: ${TABLE}."Net Working Weeks/Year" ;;
   }
@@ -333,4 +344,14 @@ view: rpt_staffing_resource_hrs {
     value_format_name: decimal_0
   }
 
+  measure: total_sups_per_shift {
+    type: sum
+    sql: ${sups_per_shift} ;;
+  }
+
+  measure: total_number_of_shifts {
+    label: "Total # of Shifts"
+    type: sum
+    sql: ${number_of_shifts} ;;
+  }
 }

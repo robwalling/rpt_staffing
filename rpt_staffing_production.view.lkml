@@ -110,6 +110,32 @@ view: rpt_staffing_production {
     allowed_value: {label: "100%" value: "1.00"}
   }
 
+  parameter: param_span_of_control {
+    label: "Span of Control"
+    type: number
+    allowed_value: {label: "-100%" value: "-1.00"}
+    allowed_value: {label: "-90%" value: "-0.90"}
+    allowed_value: {label: "-80%" value: "-0.80"}
+    allowed_value: {label: "-70%" value: "-0.70"}
+    allowed_value: {label: "-60%" value: "-0.60"}
+    allowed_value: {label: "-50%" value: "-0.50"}
+    allowed_value: {label: "-40%" value: "-0.40"}
+    allowed_value: {label: "-30%" value: "-0.30"}
+    allowed_value: {label: "-20%" value: "-0.20"}
+    allowed_value: {label: "-10%" value: "-0.10"}
+    allowed_value: {label: "0%" value: "0.00"}
+    allowed_value: {label: "10%" value: "0.10"}
+    allowed_value: {label: "20%" value: "0.20"}
+    allowed_value: {label: "30%" value: "0.30"}
+    allowed_value: {label: "40%" value: "0.40"}
+    allowed_value: {label: "50%" value: "0.50"}
+    allowed_value: {label: "60%" value: "0.60"}
+    allowed_value: {label: "70%" value: "0.70"}
+    allowed_value: {label: "80%" value: "0.80"}
+    allowed_value: {label: "90%" value: "0.90"}
+    allowed_value: {label: "100%" value: "1.00"}
+  }
+
   ######## Dimensions ########
 
   dimension: id {
@@ -118,6 +144,12 @@ view: rpt_staffing_production {
   }
 
   dimension_group: t_activity {
+    type: time
+    timeframes: [year, quarter, month, week, date]
+    sql: dateadd(day, ${day_of_operations}, ${rpt_staffing_schedule.start_date}) ;;
+  }
+
+  dimension_group: activity {
     type: time
     timeframes: [year, quarter, month, week, date]
     sql: dateadd(day, ${day_of_operations}, ${rpt_staffing_schedule.start_date}) ;;
@@ -302,8 +334,67 @@ view: rpt_staffing_production {
     value_format_name: decimal_0
   }
 
+  measure: t_beta {
+    label: "T Beta"
+    type: sum
+    sql: CASE WHEN {% parameter param_coverage %} = 0.75 then 0.674
+            WHEN {% parameter param_coverage %} = 0.76 then 0.706
+            WHEN {% parameter param_coverage %} = 0.77 then 0.738
+            WHEN {% parameter param_coverage %} = 0.78 then 0.772
+            WHEN {% parameter param_coverage %} = 0.79 then 0.806
+            WHEN {% parameter param_coverage %} = 0.80 then 0.841
+            WHEN {% parameter param_coverage %} = 0.81 then 0.877
+            WHEN {% parameter param_coverage %} = 0.82 then 0.915
+            WHEN {% parameter param_coverage %} = 0.83 then 0.954
+            WHEN {% parameter param_coverage %} = 0.84 then 0.994
+            WHEN {% parameter param_coverage %} = 0.85 then 1.036
+            WHEN {% parameter param_coverage %} = 0.86 then 1.080
+            WHEN {% parameter param_coverage %} = 0.87 then 1.126
+            WHEN {% parameter param_coverage %} = 0.88 then 1.174
+            WHEN {% parameter param_coverage %} = 0.89 then 1.226
+            WHEN {% parameter param_coverage %} = 0.90 then 1.281
+            WHEN {% parameter param_coverage %} = 0.91 then 1.340
+            WHEN {% parameter param_coverage %} = 0.92 then 1.405
+            WHEN {% parameter param_coverage %} = 0.93 then 1.475
+            WHEN {% parameter param_coverage %} = 0.94 then 1.554
+            WHEN {% parameter param_coverage %} = 0.95 then 1.644
+            WHEN {% parameter param_coverage %} = 0.96 then 1.750
+            WHEN {% parameter param_coverage %} = 0.97 then 1.880
+            WHEN {% parameter param_coverage %} = 0.98 then 2.053
+            WHEN {% parameter param_coverage %} = 0.99 then 2.326
+            ELSE null
+            END ;;
+  }
 
-
-
+  measure: beta {
+    type: sum
+    sql: CASE WHEN {% parameter param_coverage %} = 0.75 then 0.674
+            WHEN {% parameter param_coverage %} = 0.76 then 0.706
+            WHEN {% parameter param_coverage %} = 0.77 then 0.738
+            WHEN {% parameter param_coverage %} = 0.78 then 0.772
+            WHEN {% parameter param_coverage %} = 0.79 then 0.806
+            WHEN {% parameter param_coverage %} = 0.80 then 0.841
+            WHEN {% parameter param_coverage %} = 0.81 then 0.877
+            WHEN {% parameter param_coverage %} = 0.82 then 0.915
+            WHEN {% parameter param_coverage %} = 0.83 then 0.954
+            WHEN {% parameter param_coverage %} = 0.84 then 0.994
+            WHEN {% parameter param_coverage %} = 0.85 then 1.036
+            WHEN {% parameter param_coverage %} = 0.86 then 1.080
+            WHEN {% parameter param_coverage %} = 0.87 then 1.126
+            WHEN {% parameter param_coverage %} = 0.88 then 1.174
+            WHEN {% parameter param_coverage %} = 0.89 then 1.226
+            WHEN {% parameter param_coverage %} = 0.90 then 1.281
+            WHEN {% parameter param_coverage %} = 0.91 then 1.340
+            WHEN {% parameter param_coverage %} = 0.92 then 1.405
+            WHEN {% parameter param_coverage %} = 0.93 then 1.475
+            WHEN {% parameter param_coverage %} = 0.94 then 1.554
+            WHEN {% parameter param_coverage %} = 0.95 then 1.644
+            WHEN {% parameter param_coverage %} = 0.96 then 1.750
+            WHEN {% parameter param_coverage %} = 0.97 then 1.880
+            WHEN {% parameter param_coverage %} = 0.98 then 2.053
+            WHEN {% parameter param_coverage %} = 0.99 then 2.326
+            ELSE null
+            END ;;
+  }
 
 }

@@ -3,6 +3,7 @@ view: rpt_staffing_schedule {
 
   dimension: id {
     type: number
+    primary_key: yes            # Added by Rebecca
     sql: ${TABLE}."#" ;;
   }
 
