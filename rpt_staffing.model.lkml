@@ -24,6 +24,13 @@ explore: rpt_staffing_production {
     type: left_outer
     relationship: many_to_one
   }
+  join: rpt_staffing_deviation {
+    sql_on: ${rpt_staffing_production.join_identifier_for_schd} = ${rpt_staffing_deviation.join_identifier_for_schd}
+      AND ${rpt_staffing_production.join_identifier_mgmt} = ${rpt_staffing_deviation.join_identifier__mgmt}
+      AND ${rpt_staffing_production.join_identifier_resources} = ${rpt_staffing_deviation.join_identifier__resources};;
+    type: left_outer
+    relationship: one_to_one
+  }
 }
 
 
