@@ -320,8 +320,8 @@ view: rpt_staffing_production {
     sql: CASE
           WHEN ${parameter} = 'Reactive Maintenance' THEN 1+{% parameter param_reactive_maintenance %}
           WHEN ${parameter} = 'Return Excess RM' THEN 1+{% parameter param_returned_excess_rm %}
-          WHEN ${parameter} = 'Rework Rate' THEN IF(NOT ISNULL(${sublot_multiplier})
-                                                  , IF(${sublot}='Sub-lot', ${sublot_multiplier}*(1+${sublot})
+          WHEN ${parameter} = 'Rework Rate' THEN IIF(${sublot_multiplier} IS NOT NULL
+                                                  , IIF(${sublot}='Sub-lot', ${sublot_multiplier}*(1+{% parameter param_sub_lot %})
                                                     ,${sublot_multiplier})
                                                   ,1)
           WHEN ${parameter} = 'Deviations' THEN ${rpt_staffing_deviation.deviation_count}*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
