@@ -8,6 +8,7 @@ view: rpt_staffing_schedule {
   }
 
   dimension: asset {
+    hidden: yes
     type: string
     sql: ${TABLE}.Asset ;;
   }

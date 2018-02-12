@@ -159,6 +159,7 @@ view: rpt_staffing_resource_hrs {
   }
 
   dimension: assets {
+    hidden: yes
     type: string
     sql: ${TABLE}.Assets ;;
   }

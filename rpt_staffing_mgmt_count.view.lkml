@@ -3,6 +3,7 @@ view: rpt_staffing_mgmt_count {
 
 ###### Dimensions ######
   dimension: asset {
+    hidden: yes
     type: string
     sql: ${TABLE}.Asset ;;
   }

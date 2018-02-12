@@ -30,6 +30,7 @@ view: rpt_staffing_deviation {
 
 ###### Dimensions ######
   dimension: asset {
+    hidden: yes
     type: string
     sql: ${TABLE}.Asset ;;
   }
@@ -75,6 +76,7 @@ view: rpt_staffing_deviation {
   }
 
   dimension: labour {
+    hidden: yes
     type: string
     sql: ${TABLE}.Labour ;;
   }

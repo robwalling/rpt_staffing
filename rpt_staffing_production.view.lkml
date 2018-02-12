@@ -406,6 +406,25 @@ view: rpt_staffing_production {
     sql: ${TABLE}."Support Fx Identifier" ;;
   }
 
+  dimension: t_v_person_hours {
+    type: number
+    sql: ${sum_of_personhours} * ${parameter_control} * (1+ ${t_rework_work_calculation})
+      * (1+ ${t_idle_time_calculation}) ;;
+    value_format_name: decimal_0
+  }
+
+  dimension: t_rework_work_calculation {
+    type: number
+    sql: ISNULL(${average_of_rework_rate}, 0)*(1+ {% parameter param_rework_rate %});;
+    value_format_name: decimal_0
+  }
+
+  dimension: t_idle_time_calculation {
+    type: number
+    sql: ISNULL(${average_of_idle_time}, 0)*(1+ {% parameter param_idle_time %});;
+    value_format_name: decimal_0
+  }
+
   ######## Measures ########
 
   measure: count {
@@ -447,33 +466,25 @@ view: rpt_staffing_production {
   measure: t_v_ftes {
     label: "T V FTEs"
     type: number
-    sql: ${t_v_person_hours} / ${rpt_staffing_resource_hrs.v_productive_shift_hours} ;;
+    sql: ${total_t_v_person_hours} / ${rpt_staffing_resource_hrs.v_productive_shift_hours} ;;
     value_format_name: decimal_0
   }
 
-  measure: t_v_person_hours {
-    type: number
-    sql: ${total_person_hours} * ${parameter_control} * (1+ ${t_rework_work_calculation})
-          * (1+ ${t_idle_time_calculation}) ;;
+  measure: total_t_v_person_hours {
+    type: sum
+    sql: ${t_v_person_hours} ;;
     value_format_name: decimal_0
   }
 
-  measure: t_rework_work_calculation {
-    type: number
-    sql: ISNULL(${total_average_of_rework_rate}, 0)*(1+ {% parameter param_rework_rate %});;
+  measure: total_t_rework_work_calculation {
+    type: sum
+    sql: ${t_rework_work_calculation};;
     value_format_name: decimal_0
   }
 
-  measure: t_idle_time_calculation {
-    type: number
-    sql: ISNULL(${total_average_of_idle_time}, 0)*(1+ {% parameter param_idle_time %});;
-    value_format_name: decimal_0
-  }
-
-  measure: sum_t_v_ftes {
-    label: "SUM(T V FTEs)"
-    type: number
-    sql: ${t_v_person_hours} / ${rpt_staffing_resource_hrs.v_productive_shift_hours} ;;
+  measure: total_t_idle_time_calculation {
+    type: sum
+    sql: ${t_idle_time_calculation};;
     value_format_name: decimal_0
   }
 
