@@ -4,6 +4,7 @@ view: rpt_staffing_resource_hrs {
 ###### Parameters ######
   parameter: param_gowning {
     label: "Gowning Hours"
+    view_label: "Parameters"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
     allowed_value: {label: "-45%" value: "-0.45"}
@@ -30,6 +31,7 @@ view: rpt_staffing_resource_hrs {
 
   parameter: param_break {
     label: "Break Hours"
+    view_label: "Parameters"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
     allowed_value: {label: "-40%" value: "-0.40"}
@@ -46,6 +48,7 @@ view: rpt_staffing_resource_hrs {
 
   parameter: param_meeting {
     label: "Meeting Hours"
+    view_label: "Parameters"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
     allowed_value: {label: "-40%" value: "-0.40"}
@@ -62,6 +65,7 @@ view: rpt_staffing_resource_hrs {
 
   parameter: param_training {
     label: "Training Hours"
+    view_label: "Parameters"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
     allowed_value: {label: "-45%" value: "-0.45"}
@@ -88,6 +92,7 @@ view: rpt_staffing_resource_hrs {
 
   parameter: param_vacations {
     label: "Vacations"
+    view_label: "Parameters"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
     allowed_value: {label: "-45%" value: "-0.45"}
@@ -114,9 +119,37 @@ view: rpt_staffing_resource_hrs {
 
   parameter: param_soc {
     label: "SOC"
+    view_label: "Parameters"
     type: string
     allowed_value: {label: "Sups. by SOC" value: "Sups. by SOC"}
     allowed_value: {label: "Sups. by Shift" value: "Sups. by Shift"}
+  }
+
+  parameter: param_rework {
+    label: "Incremental Rework Rate"
+    view_label: "Parameters"
+    type: number
+    allowed_value: {label: "-100%" value: "-1.00"}
+    allowed_value: {label: "-90%" value: "-0.90"}
+    allowed_value: {label: "-80%" value: "-0.80"}
+    allowed_value: {label: "-70%" value: "-0.70"}
+    allowed_value: {label: "-60%" value: "-0.60"}
+    allowed_value: {label: "-50%" value: "-0.50"}
+    allowed_value: {label: "-40%" value: "-0.40"}
+    allowed_value: {label: "-30%" value: "-0.30"}
+    allowed_value: {label: "-20%" value: "-0.20"}
+    allowed_value: {label: "-10%" value: "-0.10"}
+    allowed_value: {label: "0%" value: "0.00"}
+    allowed_value: {label: "10%" value: "0.10"}
+    allowed_value: {label: "20%" value: "0.20"}
+    allowed_value: {label: "30%" value: "0.30"}
+    allowed_value: {label: "40%" value: "0.40"}
+    allowed_value: {label: "50%" value: "0.50"}
+    allowed_value: {label: "60%" value: "0.60"}
+    allowed_value: {label: "70%" value: "0.70"}
+    allowed_value: {label: "80%" value: "0.80"}
+    allowed_value: {label: "90%" value: "0.90"}
+    allowed_value: {label: "100%" value: "1.00"}
   }
 
 ###### Dimensions ######
@@ -353,5 +386,35 @@ view: rpt_staffing_resource_hrs {
     label: "Total # of Shifts"
     type: sum
     sql: ${number_of_shifts} ;;
+  }
+
+  measure: variable_break_time {
+    type: number
+    sql: ${total_break_time} * (1+ {% parameter param_break %}) ;;
+    value_format_name: decimal_0
+  }
+
+  measure: variable_gowning_time {
+    type: number
+    sql: ${total_gowning_time} * (1+ {% parameter param_gowning %} ;;
+    value_format_name: decimal_0
+  }
+
+  measure: variable_meeting_time {
+    type: number
+    sql: ${total_meeting_time} * (1+ {% parameter param_meeting %} ;;
+    value_format_name: decimal_0
+  }
+
+  measure: variable_training_hours {
+    type: number
+    sql: ${total_training} * (1+ {% parameter param_training %} ;;
+    value_format_name: decimal_0
+  }
+
+  measure: variable_vacations {
+    type: number
+    sql: ${total_vacation_holidays} * (1+ {% parameter param_vacations %} ;;
+    value_format_name: decimal_0
   }
 }

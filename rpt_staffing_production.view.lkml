@@ -33,7 +33,7 @@ view: rpt_staffing_production {
     allowed_value: {label: "99%" value: "0.99"}
   }
 
-  parameter: param_sub_lot {
+  parameter: param_sublot {
     label: "Sub-lot"
     view_label: "Parameters"
     type: number
@@ -118,54 +118,34 @@ view: rpt_staffing_production {
     label: "Reactive Maintenance per Lot"
     view_label: "Parameters"
     type: number
+    allowed_value: {label: "-50%" value: "-0.50"}
+    allowed_value: {label: "-40%" value: "-0.40"}
+    allowed_value: {label: "-30%" value: "-0.30"}
+    allowed_value: {label: "-20%" value: "-0.20"}
+    allowed_value: {label: "-10%" value: "-0.10"}
     allowed_value: {label: "0%" value: "0.00"}
-    allowed_value: {label: "5%" value: "0.05"}
     allowed_value: {label: "10%" value: "0.10"}
-    allowed_value: {label: "15%" value: "0.15"}
     allowed_value: {label: "20%" value: "0.20"}
-    allowed_value: {label: "25%" value: "0.25"}
     allowed_value: {label: "30%" value: "0.30"}
-    allowed_value: {label: "35%" value: "0.35"}
     allowed_value: {label: "40%" value: "0.40"}
-    allowed_value: {label: "45%" value: "0.45"}
     allowed_value: {label: "50%" value: "0.50"}
-    allowed_value: {label: "55%" value: "0.55"}
-    allowed_value: {label: "60%" value: "0.60"}
-    allowed_value: {label: "65%" value: "0.65"}
-    allowed_value: {label: "70%" value: "0.70"}
-    allowed_value: {label: "75%" value: "0.75"}
-    allowed_value: {label: "80%" value: "0.80"}
-    allowed_value: {label: "85%" value: "0.85"}
-    allowed_value: {label: "90%" value: "0.90"}
-    allowed_value: {label: "95%" value: "0.95"}
-    allowed_value: {label: "100%" value: "1.00"}
   }
 
   parameter: param_returned_excess_rm {
     label: "Returned Excess RM per Lot"
     view_label: "Parameters"
     type: number
+    allowed_value: {label: "-50%" value: "-0.50"}
+    allowed_value: {label: "-40%" value: "-0.40"}
+    allowed_value: {label: "-30%" value: "-0.30"}
+    allowed_value: {label: "-20%" value: "-0.20"}
+    allowed_value: {label: "-10%" value: "-0.10"}
     allowed_value: {label: "0%" value: "0.00"}
-    allowed_value: {label: "5%" value: "0.05"}
     allowed_value: {label: "10%" value: "0.10"}
-    allowed_value: {label: "15%" value: "0.15"}
     allowed_value: {label: "20%" value: "0.20"}
-    allowed_value: {label: "25%" value: "0.25"}
     allowed_value: {label: "30%" value: "0.30"}
-    allowed_value: {label: "35%" value: "0.35"}
     allowed_value: {label: "40%" value: "0.40"}
-    allowed_value: {label: "45%" value: "0.45"}
     allowed_value: {label: "50%" value: "0.50"}
-    allowed_value: {label: "55%" value: "0.55"}
-    allowed_value: {label: "60%" value: "0.60"}
-    allowed_value: {label: "65%" value: "0.65"}
-    allowed_value: {label: "70%" value: "0.70"}
-    allowed_value: {label: "75%" value: "0.75"}
-    allowed_value: {label: "80%" value: "0.80"}
-    allowed_value: {label: "85%" value: "0.85"}
-    allowed_value: {label: "90%" value: "0.90"}
-    allowed_value: {label: "95%" value: "0.95"}
-    allowed_value: {label: "100%" value: "1.00"}
   }
 
   parameter: param_change_control {
@@ -353,7 +333,7 @@ view: rpt_staffing_production {
           WHEN ${parameter} = 'Reactive Maintenance' THEN 1+{% parameter param_reactive_maintenance %}
           WHEN ${parameter} = 'Return Excess RM' THEN 1+{% parameter param_returned_excess_rm %}
           WHEN ${parameter} = 'Rework Rate' THEN IIF(${sublot_multiplier} IS NOT NULL
-                                                  , IIF(${sublot}='Sub-lot', ${sublot_multiplier}*(1+{% parameter param_sub_lot %})
+                                                  , IIF(${sublot}='Sub-lot', ${sublot_multiplier}*(1+{% parameter param_sublot %})
                                                     ,${sublot_multiplier})
                                                   ,1)
           WHEN ${parameter} = 'Deviations' THEN ${rpt_staffing_deviation.deviation_count}*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
@@ -445,7 +425,7 @@ view: rpt_staffing_production {
     value_format_name: decimal_0
   }
 
-  measure: total_sub_lot {
+  measure: total_sublot {
     label: "Sub-lot Multiplier"
     type: sum
     sql: ${sublot} ;;
@@ -464,15 +444,36 @@ view: rpt_staffing_production {
     value_format_name: decimal_0
   }
 
+  measure: t_v_ftes {
+    label: "T V FTEs"
+    type: number
+    sql: ${t_v_person_hours} / ${rpt_staffing_resource_hrs.v_productive_shift_hours} ;;
+    value_format_name: decimal_0
+  }
+
+  measure: t_v_person_hours {
+    type: number
+    sql: ${total_person_hours} * ${parameter_control} * (1+ ${t_rework_work_calculation})
+          * (1+ ${t_idle_time_calculation}) ;;
+    value_format_name: decimal_0
+  }
+
   measure: t_rework_work_calculation {
     type: number
-    sql: IFNULL(${total_average_of_rework_rate}, 0)*(1+ {% parameter param_rework_rate %});;
+    sql: ISNULL(${total_average_of_rework_rate}, 0)*(1+ {% parameter param_rework_rate %});;
     value_format_name: decimal_0
   }
 
   measure: t_idle_time_calculation {
     type: number
-    sql: IFNULL(${total_average_of_idle_time}, 0)*(1+ {% parameter param_idle_time %});;
+    sql: ISNULL(${total_average_of_idle_time}, 0)*(1+ {% parameter param_idle_time %});;
+    value_format_name: decimal_0
+  }
+
+  measure: sum_t_v_ftes {
+    label: "SUM(T V FTEs)"
+    type: number
+    sql: ${t_v_person_hours} / ${rpt_staffing_resource_hrs.v_productive_shift_hours} ;;
     value_format_name: decimal_0
   }
 
@@ -537,6 +538,18 @@ view: rpt_staffing_production {
             WHEN {% parameter param_coverage %} = 0.99 then 2.326
             ELSE null
             END ;;
+  }
+
+  measure: para_idle_time_calc_v {
+    type: number
+    sql: (1+ % parameter param_idle_time %}) * ISNULL(${total_average_of_idle_time}, 0) ;;
+    value_format_name: decimal_0
+  }
+
+  measure: rework_rate_d {
+    type: number
+    sql: ISNULL(${total_average_of_rework_rate}, 0) ;;
+    value_format_name: decimal_0
   }
 
 }
