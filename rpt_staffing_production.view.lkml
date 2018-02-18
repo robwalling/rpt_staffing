@@ -488,6 +488,23 @@ view: rpt_staffing_production {
     value_format_name: decimal_0
   }
 
+  measure: t_direct_ftes {
+    label: "T Direct FTEs"
+    type: number
+    sql: CASE WHEN ${labour} = 'Direct' THEN ${t_v_ftes}
+              ELSE 0
+              END ;;
+    value_format_name: decimal_0
+  }
+
+  measure: t_indirect_ftes {
+    label: "T Indirect FTEs"
+    type: number
+    sql: CASE WHEN ${labour} = 'Indirect' THEN ${t_v_ftes}
+              ELSE 0
+              END ;;
+    value_format_name: decimal_0
+  }
   measure: t_beta {
     label: "T Beta"
     type: sum
@@ -549,6 +566,26 @@ view: rpt_staffing_production {
             WHEN {% parameter param_coverage %} = 0.99 then 2.326
             ELSE null
             END ;;
+  }
+
+  measure: ftes {
+    label: "FTEs"
+    type: number
+    sql: (${total_person_hours} *
+            CASE WHEN ${parameter} = 'eBR' THEN {% parameter param_electronic_br %}
+                 WHEN ${parameter} = 'Paper' THEN (1- % parameter param_electronic_br %})
+                 ELSE 1
+                 END)
+          / ${rpt_staffing_resource_hrs.v_productive_shift_time} ;;
+    value_format_name: decimal_0
+  }
+
+  measure: sublot_count_v {
+    label: "Sub-lot Count V"
+    type: sum
+    sql: CASE WHEN ${sublot} = 'Sub-lot' THEN ${sublot_multiplier} * (1+ {% parameter param_sublot %})
+              ELSE ${sublot_multiplier}
+              END ;;
   }
 
   measure: para_idle_time_calc_v {

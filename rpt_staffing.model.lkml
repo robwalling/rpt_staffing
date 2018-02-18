@@ -31,8 +31,12 @@ explore: rpt_staffing_production {
     type: left_outer
     relationship: one_to_one
   }
+
+  join: include_t_activity_month {
+    sql_on: ${rpt_staffing_production.t_activity_month} = ${include_t_activity_month.t_activity_month} ;;
+    type: left_outer
+    relationship: many_to_one
+  }
 }
-
-
 
 explore: rpt_staffing_schedule {}

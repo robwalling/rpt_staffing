@@ -418,4 +418,12 @@ view: rpt_staffing_resource_hrs {
     sql: ${total_vacation_holidays} * (1+ {% parameter param_vacations %} ;;
     value_format_name: decimal_0
   }
+
+  measure: v_productive_shift_time {
+    type: number
+    sql: ((${total_shift_duration} - (${variable_break_time} + ${variable_gowning_time}
+              + ${variable_meeting_time} + ${variable_training_hours})) *
+            (${total_working_days_year} - ${variable_vacations}))
+          / ${total_working_days_year} ;;
+  }
 }
