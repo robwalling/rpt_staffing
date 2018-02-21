@@ -408,7 +408,7 @@ view: rpt_staffing_production {
 
   measure: t_v_person_hours {
     type: number
-    sql: ${sum_of_personhours} * ${parameter_control} * (1+ ${t_rework_work_calculation})
+    sql: ${total_person_hours} * ${parameter_control} * (1+ ${t_rework_work_calculation})
       * (1+ ${t_idle_time_calculation}) ;;
     value_format_name: decimal_0
   }

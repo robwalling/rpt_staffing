@@ -205,6 +205,7 @@ view: include_t_activity_month {
 
   parameter: param_gowning {
     label: "Gowning Hours"
+    description: "Including T Activity Month"
     view_label: "Parameters"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
@@ -232,6 +233,7 @@ view: include_t_activity_month {
 
   parameter: param_break {
     label: "Break Hours"
+    description: "Including T Activity Month"
     view_label: "Parameters"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
@@ -249,6 +251,7 @@ view: include_t_activity_month {
 
   parameter: param_meeting {
     label: "Meeting Hours"
+    description: "Including T Activity Month"
     view_label: "Parameters"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
@@ -266,6 +269,7 @@ view: include_t_activity_month {
 
   parameter: param_training {
     label: "Training Hours"
+    description: "Including T Activity Month"
     view_label: "Parameters"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
@@ -293,6 +297,7 @@ view: include_t_activity_month {
 
   parameter: param_vacations {
     label: "Vacations"
+    description: "Including T Activity Month"
     view_label: "Parameters"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
