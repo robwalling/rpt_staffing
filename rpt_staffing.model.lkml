@@ -62,9 +62,8 @@ explore: rpt_staffing_production {
 
   join: include_function_subfunction_testinggroup {
     view_label: "Rpt Staffing Production"
-    sql_on: ${rpt_staffing_resource_hrs.function} = ${include_function_subfunction_testinggroup.function}
-      AND ${rpt_staffing_resource_hrs.subfunction} = ${include_function_subfunction_testinggroup.subfunction}
-      AND ${rpt_staffing_resource_hrs.testing_group} = ${include_function_subfunction_testinggroup.testing_group} ;;
+    sql_on: ${rpt_staffing_resource_hrs.join_identifier_resources}
+            = ${include_function_subfunction_testinggroup.join_identifier_resources} ;;
     type: left_outer
     relationship: many_to_one
   }

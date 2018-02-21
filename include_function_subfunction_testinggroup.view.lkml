@@ -1,15 +1,15 @@
 view: include_function_subfunction_testinggroup {
   derived_table: {
-    sql: select "Function", "Sub-function", "Testing Group", AVG("Sups# Per Shift" * "# of Shifts") as dim_avg_sups_per_shift
-      from rpt_staffing_resource_hrs
-      group by "Function", "Sub-function", "Testing Group"
-       ;;
+    sql: select "Join Identifier - Resources", "Function", "Sub-function", "Testing Group"
+          , AVG("Sups# Per Shift" * "# of Shifts") as dim_avg_sups_per_shift
+        from rpt_staffing_resource_hrs
+        group by "Function", "Sub-function", "Testing Group" ;;
   }
 
-  dimension: primary_key {
+  dimension: join_identifier_resources {
     primary_key: yes
     type: string
-    sql: CONCAT(${function}, ${subfunction}, ${testing_group}) ;;
+    sql: ${TABLE}."Join Identifier - Resources" ;;
     hidden: yes
   }
 

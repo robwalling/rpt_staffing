@@ -11,6 +11,9 @@ view: include_function_subfunction {
   }
 
 ###### Dimensions ######
+
+# ------ Did not pull in "Join identifier - Resources" as the PK because that contains
+# "Testing Group" information that would have affected the grouping logic here.
   dimension: primary_key {
     primary_key: yes
     type: string

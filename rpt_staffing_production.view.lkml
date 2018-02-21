@@ -202,32 +202,6 @@ view: rpt_staffing_production {
     allowed_value: {label: "100%" value: "1.00"}
   }
 
-  parameter: param_span_of_control {
-    label: "Span of Control"
-    type: number
-    allowed_value: {label: "-100%" value: "-1.00"}
-    allowed_value: {label: "-90%" value: "-0.90"}
-    allowed_value: {label: "-80%" value: "-0.80"}
-    allowed_value: {label: "-70%" value: "-0.70"}
-    allowed_value: {label: "-60%" value: "-0.60"}
-    allowed_value: {label: "-50%" value: "-0.50"}
-    allowed_value: {label: "-40%" value: "-0.40"}
-    allowed_value: {label: "-30%" value: "-0.30"}
-    allowed_value: {label: "-20%" value: "-0.20"}
-    allowed_value: {label: "-10%" value: "-0.10"}
-    allowed_value: {label: "0%" value: "0.00"}
-    allowed_value: {label: "10%" value: "0.10"}
-    allowed_value: {label: "20%" value: "0.20"}
-    allowed_value: {label: "30%" value: "0.30"}
-    allowed_value: {label: "40%" value: "0.40"}
-    allowed_value: {label: "50%" value: "0.50"}
-    allowed_value: {label: "60%" value: "0.60"}
-    allowed_value: {label: "70%" value: "0.70"}
-    allowed_value: {label: "80%" value: "0.80"}
-    allowed_value: {label: "90%" value: "0.90"}
-    allowed_value: {label: "100%" value: "1.00"}
-  }
-
   ######## Dimensions ########
 
   dimension: id {
@@ -479,17 +453,19 @@ view: rpt_staffing_production {
   }
 # --------------------------------------------------------------------------
 
-  measure: total_t_rework_work_calculation {
-    type: number      # Rebecca changed this to number due to LookML errors
-    sql: ${t_rework_work_calculation};;
-    value_format_name: decimal_0
-  }
-
-  measure: total_t_idle_time_calculation {
-    type: number      # Rebecca changed this to number due to LookML errors
-    sql: ${t_idle_time_calculation};;
-    value_format_name: decimal_0
-  }
+# ------ Rebecca doesn't believe we need these; the above number types work in the Explore ------
+#  measure: total_t_rework_work_calculation {
+#    type: number      # Rebecca changed this to number due to LookML errors
+#    sql: ${t_rework_work_calculation};;
+#    value_format_name: decimal_0
+#  }
+#
+#  measure: total_t_idle_time_calculation {
+#    type: number      # Rebecca changed this to number due to LookML errors
+#    sql: ${t_idle_time_calculation};;
+#    value_format_name: decimal_0
+#  }
+# -----------------------------------------------------------------------------------------------
 
   measure: t_direct_ftes {
     label: "T Direct FTEs"
