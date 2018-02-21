@@ -29,6 +29,13 @@ view: rpt_staffing_deviation {
   }
 
 ###### Dimensions ######
+  dimension: primary_key {
+    primary_key: yes
+    type: string
+    sql: CONCAT(${join_identifier_mgmt}, ${day_of_operations}, ${asset}, ${classification}) ;;
+    hidden: yes
+  }
+
   dimension: asset {
     hidden: yes
     type: string
@@ -60,12 +67,12 @@ view: rpt_staffing_deviation {
     sql: ${TABLE}."Function" ;;
   }
 
-  dimension: join_identifier__mgmt {
+  dimension: join_identifier_mgmt {
     type: string
     sql: ${TABLE}."Join_Identifier_-_Mgmt" ;;
   }
 
-  dimension: join_identifier__resources {
+  dimension: join_identifier_resources {
     type: string
     sql: ${TABLE}."Join_Identifier_-_Resources" ;;
   }

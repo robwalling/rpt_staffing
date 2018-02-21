@@ -18,7 +18,7 @@ view: rpt_staffing_mgmt_count {
     sql: ${TABLE}."Function" ;;
   }
 
-  dimension: join_identifier__mgmt {
+  dimension: join_identifier_mgmt {
     type: string
     sql: ${TABLE}."Join Identifier - Mgmt" ;;
   }

@@ -406,25 +406,6 @@ view: rpt_staffing_production {
     sql: ${TABLE}."Support Fx Identifier" ;;
   }
 
-  dimension: t_v_person_hours {
-    type: number
-    sql: ${sum_of_personhours} * ${parameter_control} * (1+ ${t_rework_work_calculation})
-      * (1+ ${t_idle_time_calculation}) ;;
-    value_format_name: decimal_0
-  }
-
-  dimension: t_rework_work_calculation {
-    type: number
-    sql: ISNULL(${average_of_rework_rate}, 0)*(1+ {% parameter param_rework_rate %});;
-    value_format_name: decimal_0
-  }
-
-  dimension: t_idle_time_calculation {
-    type: number
-    sql: ISNULL(${average_of_idle_time}, 0)*(1+ {% parameter param_idle_time %});;
-    value_format_name: decimal_0
-  }
-
   ######## Measures ########
 
   measure: count {
@@ -451,6 +432,13 @@ view: rpt_staffing_production {
     value_format_name: decimal_0
   }
 
+  measure: t_v_person_hours {
+    type: number
+    sql: ${sum_of_personhours} * ${parameter_control} * (1+ ${t_rework_work_calculation})
+      * (1+ ${t_idle_time_calculation}) ;;
+    value_format_name: decimal_0
+  }
+
   measure: total_average_of_rework_rate {
     type: sum
     sql: ${average_of_rework_rate} ;;
@@ -471,19 +459,34 @@ view: rpt_staffing_production {
   }
 
   measure: total_t_v_person_hours {
-    type: sum
+    type: number      # Rebecca changed this to number due to LookML errors
     sql: ${t_v_person_hours} ;;
     value_format_name: decimal_0
   }
 
+# ------ Rebecca changed these back to measures due to LookML errors ------
+# ("Field references an aggregate bus is specified as a 'dimension'.")
+  measure: t_rework_work_calculation {
+    type: number
+    sql: ISNULL(${total_average_of_rework_rate}, 0)*(1+ {% parameter param_rework_rate %});;
+    value_format_name: decimal_0
+  }
+
+  measure: t_idle_time_calculation {
+    type: number
+    sql: ISNULL(${total_average_of_idle_time}, 0)*(1+ {% parameter param_idle_time %});;
+    value_format_name: decimal_0
+  }
+# --------------------------------------------------------------------------
+
   measure: total_t_rework_work_calculation {
-    type: sum
+    type: number      # Rebecca changed this to number due to LookML errors
     sql: ${t_rework_work_calculation};;
     value_format_name: decimal_0
   }
 
   measure: total_t_idle_time_calculation {
-    type: sum
+    type: number      # Rebecca changed this to number due to LookML errors
     sql: ${t_idle_time_calculation};;
     value_format_name: decimal_0
   }
@@ -505,6 +508,21 @@ view: rpt_staffing_production {
               END ;;
     value_format_name: decimal_0
   }
+
+  measure: direct_total_ftes {
+    label: "Direct/Total FTEs"
+    type: number
+    sql: ${t_direct_ftes} / (${t_indirect_ftes} + ${t_direct_ftes}) ;;
+    value_format_name: decimal_0
+  }
+
+  measure: indirect_total_ftes {
+    label: "Indirect/Total FTEs"
+    type: number
+    sql: ${t_indirect_ftes} / (${t_direct_ftes} + ${t_indirect_ftes}) ;;
+    value_format_name: decimal_0
+  }
+
   measure: t_beta {
     label: "T Beta"
     type: sum
