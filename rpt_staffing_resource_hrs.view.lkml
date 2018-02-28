@@ -5,6 +5,7 @@ view: rpt_staffing_resource_hrs {
   parameter: param_gowning {
     label: "Gowning Hours"
     view_label: "Parameters"
+    default_value: "0.20"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
     allowed_value: {label: "-45%" value: "-0.45"}
@@ -32,6 +33,7 @@ view: rpt_staffing_resource_hrs {
   parameter: param_break {
     label: "Break Hours"
     view_label: "Parameters"
+    default_value: "0.20"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
     allowed_value: {label: "-40%" value: "-0.40"}
@@ -49,6 +51,7 @@ view: rpt_staffing_resource_hrs {
   parameter: param_meeting {
     label: "Meeting Hours"
     view_label: "Parameters"
+    default_value: "0.20"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
     allowed_value: {label: "-40%" value: "-0.40"}
@@ -66,6 +69,7 @@ view: rpt_staffing_resource_hrs {
   parameter: param_training {
     label: "Training Hours"
     view_label: "Parameters"
+    default_value: "0.20"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
     allowed_value: {label: "-45%" value: "-0.45"}
@@ -93,6 +97,7 @@ view: rpt_staffing_resource_hrs {
   parameter: param_vacations {
     label: "Vacations"
     view_label: "Parameters"
+    default_value: "0.20"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
     allowed_value: {label: "-45%" value: "-0.45"}
@@ -120,6 +125,7 @@ view: rpt_staffing_resource_hrs {
   parameter: param_soc {
     label: "SOC"
     view_label: "Parameters"
+    default_value: "Sups. by SOC"
     type: string
     allowed_value: {label: "Sups. by SOC" value: "Sups. by SOC"}
     allowed_value: {label: "Sups. by Shift" value: "Sups. by Shift"}
@@ -128,6 +134,7 @@ view: rpt_staffing_resource_hrs {
   parameter: param_rework {
     label: "Incremental Rework Rate"
     view_label: "Parameters"
+    default_value: "0.20"
     type: number
     allowed_value: {label: "-100%" value: "-1.00"}
     allowed_value: {label: "-90%" value: "-0.90"}
@@ -278,11 +285,25 @@ view: rpt_staffing_resource_hrs {
     sql: ${working_days_month} ;;
   }
 
-  measure: v_productive_shift_hours {
+  measure: average_working_days_month {
+    label: "Average Working Days / Month"
+    type: average
+    sql: ${working_days_month} ;;
+  }
+
+#   measure: v_productive_shift_hours {
+#     type: number
+#     sql: ((${total_shift_duration} -
+#             (${v_gowning_hours} + ${v_break_hours} + ${v_meeting_hours} + ${v_training_hours})) *
+#           (${total_working_days_year} - ${v_vacations}) / ${total_working_days_year}) ;;
+#     value_format_name: decimal_0
+#   }
+
+  dimension: v_productive_shift_hours {
     type: number
-    sql: ((${total_shift_duration} -
+    sql: ((${shift_duration} -
             (${v_gowning_hours} + ${v_break_hours} + ${v_meeting_hours} + ${v_training_hours})) *
-          (${total_working_days_year} - ${v_vacations}) / ${total_working_days_year}) ;;
+          (${working_days_year} - ${v_vacations}) / ${working_days_year}) ;;
     value_format_name: decimal_0
   }
 
@@ -292,26 +313,50 @@ view: rpt_staffing_resource_hrs {
     value_format_name: decimal_0
   }
 
-  measure: v_gowning_hours {
-    type: sum
+#   measure: v_gowning_hours {
+#     type: sum
+#     sql: ${gowning_time} * (1+ {% parameter param_gowning %}) ;;
+#     value_format_name: decimal_0
+#   }
+
+  dimension: v_gowning_hours {
+    type: number
     sql: ${gowning_time} * (1+ {% parameter param_gowning %}) ;;
     value_format_name: decimal_0
   }
 
-  measure: v_break_hours {
-    type: sum
+#   measure: v_break_hours {
+#     type: sum
+#     sql: ${break_time} * (1+ {% parameter param_break %}) ;;
+#     value_format_name: decimal_0
+#   }
+
+  dimension: v_break_hours {
+    type: number
     sql: ${break_time} * (1+ {% parameter param_break %}) ;;
     value_format_name: decimal_0
   }
 
-  measure: v_meeting_hours {
-    type: sum
+#   measure: v_meeting_hours {
+#     type: sum
+#     sql: ${meeting_time} * (1+ {% parameter param_meeting %}) ;;
+#     value_format_name: decimal_0
+#   }
+
+  dimension: v_meeting_hours {
+    type: number
     sql: ${meeting_time} * (1+ {% parameter param_meeting %}) ;;
     value_format_name: decimal_0
   }
 
-  measure: v_training_hours {
-    type: sum
+#   measure: v_training_hours {
+#     type: sum
+#     sql: ${training} * (1+ {% parameter param_training %}) ;;
+#     value_format_name: decimal_0
+#   }
+
+  dimension: v_training_hours {
+    type: number
     sql: ${training} * (1+ {% parameter param_training %}) ;;
     value_format_name: decimal_0
   }
@@ -321,8 +366,14 @@ view: rpt_staffing_resource_hrs {
     sql: ${working_days_year} ;;
   }
 
-  measure: v_vacations {
-    type: sum
+#   measure: v_vacations {
+#     type: sum
+#     sql: ${vacation_holidays} * (1+ {% parameter param_vacations %}) ;;
+#     value_format_name: decimal_0
+#   }
+
+  dimension: v_vacations {
+    type: number
     sql: ${vacation_holidays} * (1+ {% parameter param_vacations %}) ;;
     value_format_name: decimal_0
   }

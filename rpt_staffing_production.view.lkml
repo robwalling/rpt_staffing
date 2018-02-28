@@ -5,6 +5,7 @@ view: rpt_staffing_production {
   parameter: param_coverage {
     label: "Coverage"
     view_label: "Parameters"
+    default_value: "0.80"
     type: number
     allowed_value: {label: "75%" value: "0.75"}
     allowed_value: {label: "76%" value: "0.76"}
@@ -36,6 +37,7 @@ view: rpt_staffing_production {
   parameter: param_sublot {
     label: "Sub-lot"
     view_label: "Parameters"
+    default_value: "0.50"
     type: number
     allowed_value: {label: "-100%" value: "-1.00"}
     allowed_value: {label: "-90%" value: "-0.90"}
@@ -63,6 +65,7 @@ view: rpt_staffing_production {
   parameter: param_rework_rate {
     label: "Incremental Rate of Rework Rate"
     view_label: "Parameters"
+    default_value: "0.50"
     type: number
     allowed_value: {label: "-100%" value: "-1.00"}
     allowed_value: {label: "-90%" value: "-0.90"}
@@ -90,6 +93,7 @@ view: rpt_staffing_production {
   parameter: param_idle_time {
     label: "Idle Time"
     view_label: "Parameters"
+    default_value: "0.50"
     type: number
     allowed_value: {label: "-100%" value: "-1.00"}
     allowed_value: {label: "-90%" value: "-0.90"}
@@ -117,6 +121,7 @@ view: rpt_staffing_production {
   parameter: param_reactive_maintenance {
     label: "Reactive Maintenance per Lot"
     view_label: "Parameters"
+    default_value: "0.20"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
     allowed_value: {label: "-40%" value: "-0.40"}
@@ -134,6 +139,7 @@ view: rpt_staffing_production {
   parameter: param_returned_excess_rm {
     label: "Returned Excess RM per Lot"
     view_label: "Parameters"
+    default_value: "0.20"
     type: number
     allowed_value: {label: "-50%" value: "-0.50"}
     allowed_value: {label: "-40%" value: "-0.40"}
@@ -151,6 +157,7 @@ view: rpt_staffing_production {
   parameter: param_change_control {
     label: "Change Control"
     view_label: "Parameters"
+    default_value: "0.50"
     type: number
     allowed_value: {label: "-100%" value: "-1.00"}
     allowed_value: {label: "-90%" value: "-0.90"}
@@ -178,6 +185,7 @@ view: rpt_staffing_production {
   parameter: param_electronic_br {
     label: "Electronic BR"
     view_label: "Parameters"
+    default_value: "0.20"
     type: number
     allowed_value: {label: "0%" value: "0.00"}
     allowed_value: {label: "5%" value: "0.05"}
@@ -370,7 +378,7 @@ view: rpt_staffing_production {
   }
 
   dimension: sum_of_personhours {
-    hidden: yes
+#     hidden: yes
     type: number
     sql: ${TABLE}."Sum of Person-hours" ;;
   }
@@ -406,9 +414,16 @@ view: rpt_staffing_production {
     value_format_name: decimal_0
   }
 
-  measure: t_v_person_hours {
+#   measure: t_v_person_hours {
+#     type: number
+#     sql: ${total_person_hours} * ${parameter_control} * (1+ ${t_rework_work_calculation})
+#       * (1+ ${t_idle_time_calculation}) ;;
+#     value_format_name: decimal_0
+#   }
+
+  dimension: t_v_person_hours {
     type: number
-    sql: ${total_person_hours} * ${parameter_control} * (1+ ${t_rework_work_calculation})
+    sql: ${sum_of_personhours} * ${parameter_control} * (1+ ${t_rework_work_calculation})
       * (1+ ${t_idle_time_calculation}) ;;
     value_format_name: decimal_0
   }
@@ -425,32 +440,71 @@ view: rpt_staffing_production {
     value_format_name: decimal_0
   }
 
-  measure: t_v_ftes {
+#   measure: t_v_ftes {
+#     label: "T V FTEs"
+#     type: number
+#     sql: ${total_t_v_person_hours} / ${rpt_staffing_resource_hrs.v_productive_shift_hours} ;;
+#     value_format_name: decimal_0
+#   }
+
+  dimension: t_v_ftes {
     label: "T V FTEs"
     type: number
-    sql: ${total_t_v_person_hours} / ${rpt_staffing_resource_hrs.v_productive_shift_hours} ;;
+    sql: ${t_v_person_hours} / nullif(${rpt_staffing_resource_hrs.v_productive_shift_hours},0) ;;
     value_format_name: decimal_0
   }
 
+  measure: total_t_v_ftes {
+    label: "Total T V FTEs"
+    type: sum
+    sql: ${t_v_ftes} ;;
+    value_format_name: decimal_0
+  }
+
+  measure: t_average_ftes {
+    label: "T Average FTEs"
+    type: number
+    sql: 1.0*(${total_t_v_ftes})/nullif(1.0*${rpt_staffing_resource_hrs.average_working_days_month}, 0) ;;
+    value_format_name: decimal_2
+  }
+
   measure: total_t_v_person_hours {
-    type: number      # Rebecca changed this to number due to LookML errors
+    type: sum      # Rebecca changed this to number due to LookML errors #Maire changed this back to a sum
     sql: ${t_v_person_hours} ;;
     value_format_name: decimal_0
   }
 
 # ------ Rebecca changed these back to measures due to LookML errors ------
 # ("Field references an aggregate bus is specified as a 'dimension'.")
-  measure: t_rework_work_calculation {
+# The above was occurring because there were mixed measures and dimensions - this needs to be rectified
+
+##NOTE: MAIRE - CHANGING ALL OF THESE BACK TO DIMENSIONS - THEY ARE ROW LEVEL CALCULATIONS THAT GET AGGREGATED AT THE END
+##THERE ARE A FEW SCENARIOS IN WHICH SUMS OR AVERAGES ARE PRESENT WITHIN THE CALCULATION,
+##BUT WHEN THIS DOESN'T HAPPEN, THESE NEED TO BE CALCULATED AT A ROW LEVEL AND THEN AGGREGATED
+#   measure: t_rework_work_calculation {
+#     type: number
+#     sql: ISNULL(${total_average_of_rework_rate}, 0)*(1+ {% parameter param_rework_rate %});;
+#     value_format_name: decimal_0
+#   }
+#
+#   measure: t_idle_time_calculation {
+#     type: number
+#     sql: ISNULL(${total_average_of_idle_time}, 0)*(1+ {% parameter param_idle_time %});;
+#     value_format_name: decimal_0
+#   }
+
+  dimension: t_rework_work_calculation {
     type: number
-    sql: ISNULL(${total_average_of_rework_rate}, 0)*(1+ {% parameter param_rework_rate %});;
-    value_format_name: decimal_0
+    sql: ISNULL(${average_of_rework_rate}, 0)*(1+ {% parameter param_rework_rate %});;
+    value_format_name: decimal_2
   }
 
-  measure: t_idle_time_calculation {
+  dimension: t_idle_time_calculation {
     type: number
-    sql: ISNULL(${total_average_of_idle_time}, 0)*(1+ {% parameter param_idle_time %});;
-    value_format_name: decimal_0
+    sql: ISNULL(${average_of_idle_time}, 0)*(1+ {% parameter param_idle_time %});;
+    value_format_name: decimal_2
   }
+
 # --------------------------------------------------------------------------
 
 # ------ Rebecca doesn't believe we need these; the above number types work in the Explore ------
