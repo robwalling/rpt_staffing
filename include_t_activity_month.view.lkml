@@ -5,37 +5,6 @@ view: include_t_activity_month {
         CONVERT(VARCHAR(7),dateadd(day, (rpt_staffing_production."Day of Operations"), (CONVERT(VARCHAR(10),rpt_staffing_schedule."Start Date" ,120))) ,120)
           AS "t_activity_month"
 
-        -- Get dimensionalized [T V FTEs]: SUM( [T V Person Hours]/[V Productive Shift Hours] )
-        ---- [T V Person Hours] is comprised of [Sum of Person-hours] multiplied by [Parameter Control]...
-        , ((COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
-                  WHEN rpt_staffing_production.Parameter = 'Reactive Maintenance' THEN 1+NULL
-                  WHEN rpt_staffing_production.Parameter = 'Return Excess RM' THEN 1+NULL
-                  WHEN rpt_staffing_production.Parameter = 'Rework Rate' THEN IIF((rpt_staffing_production."Sub-lot Multiplier") IS NOT NULL
-                                                          , IIF((rpt_staffing_production."Sub-lot")='Sub-lot', (rpt_staffing_production."Sub-lot Multiplier")*(1+NULL)
-                                                            ,(rpt_staffing_production."Sub-lot Multiplier"))
-                                                          ,1)
-                  WHEN rpt_staffing_production.Parameter = 'Deviations' THEN rpt_staffing_deviation.Deviation_Count*(1+ NULL)
-                  WHEN rpt_staffing_production.Parameter = 'Change Control' THEN (1+NULL)
-                  WHEN rpt_staffing_production.Parameter = 'eBR' THEN NULL
-                  WHEN rpt_staffing_production.Parameter = 'Paper' THEN 1-NULL
-                  ELSE 1
-                END
-
-        ---- multiplied by (1+ [T Rework Work Calc.]...
-                  * (1+ (ISNULL((rpt_staffing_production."Average of Rework Rate"), 0)*(1+ NULL)))
-
-        ---- multiplied by (1+ [T Idle Time Calc.].
-                  * (1+ (ISNULL((rpt_staffing_production."Average of Idle Time"), 0)*(1+ NULL)))) ), 0))
-
-        ---- Divide the result by [V Productive Shift Hours].
-            / ((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
-                                         + SUM("Break Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_break %})
-                                         + SUM("Meeting Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_meeting %})
-                                         + SUM("Training")*(1+ {% parameter rpt_staffing_resource_hrs.param_training %})))
-                / (SUM("Working days / Year") - SUM("Vacation + holidays")*(1+ {% parameter rpt_staffing_resource_hrs.param_vacations %}))
-              / SUM("Working days / Year")))
-          / AVG("Working days / Month") as "dim_t_average_ftes"
-
         -- Get dimensionalized [SF QC  avg ops]
         , CASE
             WHEN rpt_staffing_production."Function" = 'QC' THEN (COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
@@ -233,12 +202,6 @@ view: include_t_activity_month {
     hidden: yes
   }
 
-  dimension: dim_t_average_ftes {
-    type: string
-    sql: ${TABLE}.dim_t_average_ftes ;;
-    hidden: yes
-  }
-
   dimension: dim_sf_qc_avg_ops {
     type: string
     sql: ${TABLE}.dim_sf_qc_avg_ops ;;
@@ -282,12 +245,6 @@ view: include_t_activity_month {
   }
 
 ###### Measures ######
-  measure: t_average_ftes {
-    type: average
-    sql: ${dim_t_average_ftes} ;;
-    value_format_name: decimal_0
-  }
-
   measure: sf_qc_avg_ops {
     label: "SF QC Avg Ops"
     type: average
@@ -340,7 +297,6 @@ view: include_t_activity_month {
   set: detail {
     fields: [
       t_activity_month,
-      dim_t_average_ftes,
       dim_sf_qc_avg_ops,
       dim_sf_qa_avg_ops,
       dim_sf_engineering_avg_ops,

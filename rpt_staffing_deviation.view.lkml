@@ -4,6 +4,7 @@ view: rpt_staffing_deviation {
 ###### Parameters ######
   parameter: param_deviations {
     label: "Deviations"
+    default_value: "0.20"
     type: number
     allowed_value: {label: "-100%" value: "-1.00"}
     allowed_value: {label: "-90%" value: "-0.90"}

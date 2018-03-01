@@ -458,7 +458,7 @@ view: rpt_staffing_production {
     label: "Total T V FTEs"
     type: sum
     sql: ${t_v_ftes} ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: t_average_ftes {
