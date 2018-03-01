@@ -213,8 +213,10 @@ view: rpt_staffing_production {
   ######## Dimensions ########
 
   dimension: id {
+    primary_key: yes
     type: number
     sql: ${TABLE}."#" ;;
+    hidden: yes
   }
 
   dimension_group: t_activity {
@@ -539,6 +541,50 @@ view: rpt_staffing_production {
     value_format_name: decimal_0
   }
 
+  measure: sl_production_ops {
+    label: "SL Production Ops"
+    description: "Should use with T Activity Date dimension"
+    type: number
+    sql: ${include_t_activity_date.prd_20k_dsp_avg_ops}
+            + ${t_beta}* ISNULL(STDEV(${include_t_activity_date.dim_prd_20k_dsp_avg_ops}), 0)
+          + ${include_t_activity_date.prd_20k_usp_avg_ops}
+            + ${t_beta}*0.65* ISNULL(STDEV(${include_t_activity_date.dim_prd_20k_usp_avg_ops}), 0)
+          + ${include_t_activity_date.prd_5k_dsp_avg_ops}
+            + ${t_beta}* ISNULL(STDEV(${include_t_activity_date.dim_prd_5k_dsp_avg_ops}), 0)
+          + ${include_t_activity_date.prd_5k_usp_avg_ops}
+            + ${t_beta}*0.65* ISNULL(STDEV(${include_t_activity_date.dim_prd_5k_usp_avg_ops}), 0)
+          + ${include_t_activity_date.prd_mono_dsp_avg_ops}
+            + ${t_beta}* ISNULL(STDEV(${include_t_activity_date.dim_prd_mono_dsp_avg_ops}), 0)
+          + ${include_t_activity_date.prd_mono_usp_avg_ops}
+            + ${t_beta}*0.65* ISNULL(STDEV(${include_t_activity_date.dim_prd_mono_usp_avg_ops}), 0)
+          + ${include_t_activity_date.prd_ct_usp_avg_ops}
+            + ${t_beta}*0.65* ISNULL(STDEV(${include_t_activity_date.dim_prd_ct_usp_avg_ops}), 0)
+          + ${include_t_activity_date.prd_p5_dsp_avg_ops}
+            + ${t_beta}* ISNULL(STDEV(${include_t_activity_date.dim_prd_p5_dsp_avg_ops}), 0);;
+    value_format_name: decimal_3
+  }
+
+  measure: sl_sf_ops {
+    label: "SL SF Ops"
+    description: "Should use with T Activity Month dimension"
+    type: number
+    sql: ${include_t_activity_month.sf_qc_avg_ops}
+            + ${t_beta}*0.9* ISNULL(STDEV(${include_t_activity_month.dim_sf_qc_avg_ops}), 0)
+          + ${include_t_activity_month.sf_qa_avg_ops}
+            + ${t_beta}*0.9* ISNULL(STDEV(${include_t_activity_month.dim_sf_qa_avg_ops}), 0)
+          + ${include_t_activity_month.sf_engineering_avg_ops}
+            + ${t_beta}*0.9* ISNULL(STDEV(${include_t_activity_month.dim_sf_engineering_avg_ops}), 0)
+          + ${include_t_activity_month.sf_ppl_avg_ops}
+            + ${t_beta}*0.9* ISNULL(STDEV(${include_t_activity_month.dim_sf_ppl_avg_ops}), 0)
+          + ${include_t_activity_month.sf_production_services_avg_ops}
+            + ${t_beta}*0.9* ISNULL(STDEV(${include_t_activity_month.dim_sf_production_services_avg_ops}), 0)
+          + ${include_t_activity_month.sf_msat_avg_ops}
+            + ${t_beta}*0.9* ISNULL(STDEV(${include_t_activity_month.dim_sf_msat_avg_ops}), 0)
+          + ${include_t_activity_month.sf_mfg_support_avg_ops}
+            + ${t_beta}*0.9* ISNULL(STDEV(${include_t_activity_month.dim_sf_manufacturing_avg_ops}), 0);;
+    value_format_name: decimal_3
+  }
+
   measure: direct_total_ftes {
     label: "Direct/Total FTEs"
     type: number
@@ -581,7 +627,7 @@ view: rpt_staffing_production {
             WHEN {% parameter param_coverage %} = 0.97 then 1.880
             WHEN {% parameter param_coverage %} = 0.98 then 2.053
             WHEN {% parameter param_coverage %} = 0.99 then 2.326
-            ELSE null
+            ELSE 0
             END ;;
   }
 
@@ -612,7 +658,7 @@ view: rpt_staffing_production {
             WHEN {% parameter param_coverage %} = 0.97 then 1.880
             WHEN {% parameter param_coverage %} = 0.98 then 2.053
             WHEN {% parameter param_coverage %} = 0.99 then 2.326
-            ELSE null
+            ELSE 0
             END ;;
   }
 
@@ -621,11 +667,22 @@ view: rpt_staffing_production {
     type: number
     sql: (${total_person_hours} *
             CASE WHEN ${parameter} = 'eBR' THEN {% parameter param_electronic_br %}
-                 WHEN ${parameter} = 'Paper' THEN (1- % parameter param_electronic_br %})
+                 WHEN ${parameter} = 'Paper' THEN (1- {% parameter param_electronic_br %})
                  ELSE 1
                  END)
           / ${rpt_staffing_resource_hrs.v_productive_shift_time} ;;
     value_format_name: decimal_0
+  }
+
+  measure: total_person_hours_v {
+    label: "Total Person-Hours v"
+    type: number
+    sql: CASE WHEN ${sublot_count_v} is not null
+                THEN ${sublot_count_v} * ${total_person_hours} * (1+ {% parameter param_rework_rate %})
+                  * (1+ ${para_idle_time_calc_v})
+              ELSE ${total_person_hours} * (1+ {% parameter param_rework_rate %})
+                  * (1+ ${para_idle_time_calc_v})
+              END ;;
   }
 
   measure: sublot_count_v {
@@ -648,4 +705,12 @@ view: rpt_staffing_production {
     value_format_name: decimal_0
   }
 
+  measure: para_return_excess_rm_v {
+    type: number
+    sql: CASE WHEN ${parameter} = 'Return Excess RM'
+                THEN ${total_t_v_ftes} * (1+ {% parameter param_returned_excess_rm %}
+              ELSE 0
+              END ;;
+    value_format_name: decimal_0
+  }
 }

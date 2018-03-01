@@ -1,170 +1,14 @@
-# ------ SQL works, but columns return 0 values ------
-view: include_t_activity_month {
+view: include_t_activity_date {
   derived_table: {
     sql: SELECT
-        CONVERT(VARCHAR(7),dateadd(day, (rpt_staffing_production."Day of Operations"), (CONVERT(VARCHAR(10),rpt_staffing_schedule."Start Date" ,120))) ,120)
-          AS "t_activity_month"
+        ROW_NUMBER() over (order by CONVERT(VARCHAR(10),dateadd(day, (rpt_staffing_production."Day of Operations"), (CONVERT(VARCHAR(10),rpt_staffing_schedule."Start Date" ,120))) ,120) asc)
+          AS "row_number"
+        , CONVERT(VARCHAR(10),dateadd(day, (rpt_staffing_production."Day of Operations"), (CONVERT(VARCHAR(10),rpt_staffing_schedule."Start Date" ,120))) ,120)
+          AS "t_activity_date"
 
-        -- Get dimensionalized [SF QC  avg ops]
+        -- Get dimensionalized [Prd 20K DSP avg ops]
         , CASE
-            WHEN rpt_staffing_production."Function" = 'QC' THEN (COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
-                WHEN rpt_staffing_production.Parameter = 'Reactive Maintenance' THEN 1+ {% parameter rpt_staffing_production.param_reactive_maintenance %}
-                WHEN rpt_staffing_production.Parameter = 'Return Excess RM' THEN 1+ {% parameter rpt_staffing_production.param_returned_excess_rm %}
-                WHEN rpt_staffing_production.Parameter = 'Rework Rate' THEN IIF((rpt_staffing_production."Sub-lot Multiplier") IS NOT NULL
-                                                        , IIF((rpt_staffing_production."Sub-lot")='Sub-lot', (rpt_staffing_production."Sub-lot Multiplier")*(1+ {% parameter rpt_staffing_production.param_sublot %})
-                                                          ,(rpt_staffing_production."Sub-lot Multiplier"))
-                                                        ,1)
-                WHEN rpt_staffing_production.Parameter = 'Deviations' THEN rpt_staffing_deviation.Deviation_Count*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
-                WHEN rpt_staffing_production.Parameter = 'Change Control' THEN (1+{% parameter rpt_staffing_production.param_change_control %})
-                WHEN rpt_staffing_production.Parameter = 'eBR' THEN {% parameter rpt_staffing_production.param_electronic_br %}
-                WHEN rpt_staffing_production.Parameter = 'Paper' THEN 1-{% parameter rpt_staffing_production.param_returned_excess_rm %}
-                ELSE 1
-              END * (1+ (ISNULL((rpt_staffing_production."Average of Rework Rate"), 0)*(1+ {% parameter rpt_staffing_production.param_rework_rate %})))
-                * (1+ (ISNULL((rpt_staffing_production."Average of Idle Time"), 0)*(1+ {% parameter rpt_staffing_production.param_idle_time %})))) ), 0))
-              / (((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
-                                         + SUM("Break Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_break %})
-                                         + SUM("Meeting Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_meeting %})
-                                         + SUM("Training")*(1+ {% parameter rpt_staffing_resource_hrs.param_training %})))
-                  * (SUM("Working days / Year") - SUM("Vacation + holidays")*(1+ {% parameter rpt_staffing_resource_hrs.param_vacations %}))
-                / SUM("Working days / Year"))
-              * SUM("Working days / Month"))
-            ELSE 0
-            END as dim_sf_qc_avg_ops
-
-        -- Get dimensionalized [SF QA  avg ops]
-        , CASE
-            WHEN rpt_staffing_production."Function" = 'QA' THEN (COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
-                WHEN rpt_staffing_production.Parameter = 'Reactive Maintenance' THEN 1+ {% parameter rpt_staffing_production.param_reactive_maintenance %}
-                WHEN rpt_staffing_production.Parameter = 'Return Excess RM' THEN 1+ {% parameter rpt_staffing_production.param_returned_excess_rm %}
-                WHEN rpt_staffing_production.Parameter = 'Rework Rate' THEN IIF((rpt_staffing_production."Sub-lot Multiplier") IS NOT NULL
-                                                        , IIF((rpt_staffing_production."Sub-lot")='Sub-lot', (rpt_staffing_production."Sub-lot Multiplier")*(1+ {% parameter rpt_staffing_production.param_sublot %})
-                                                          ,(rpt_staffing_production."Sub-lot Multiplier"))
-                                                        ,1)
-                WHEN rpt_staffing_production.Parameter = 'Deviations' THEN rpt_staffing_deviation.Deviation_Count*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
-                WHEN rpt_staffing_production.Parameter = 'Change Control' THEN (1+{% parameter rpt_staffing_production.param_change_control %})
-                WHEN rpt_staffing_production.Parameter = 'eBR' THEN {% parameter rpt_staffing_production.param_electronic_br %}
-                WHEN rpt_staffing_production.Parameter = 'Paper' THEN 1-{% parameter rpt_staffing_production.param_returned_excess_rm %}
-                ELSE 1
-              END * (1+ (ISNULL((rpt_staffing_production."Average of Rework Rate"), 0)*(1+ {% parameter rpt_staffing_production.param_rework_rate %})))
-                * (1+ (ISNULL((rpt_staffing_production."Average of Idle Time"), 0)*(1+ {% parameter rpt_staffing_production.param_idle_time %})))) ), 0))
-              / (((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
-                                         + SUM("Break Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_break %})
-                                         + SUM("Meeting Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_meeting %})
-                                         + SUM("Training")*(1+ {% parameter rpt_staffing_resource_hrs.param_training %})))
-                  * (SUM("Working days / Year") - SUM("Vacation + holidays")*(1+ {% parameter rpt_staffing_resource_hrs.param_vacations %}))
-                / SUM("Working days / Year"))
-              * SUM("Working days / Month"))
-              ELSE 0
-              END as dim_sf_qa_avg_ops
-
-        -- Get dimensionalized [SF Engineering  avg ops]
-        , CASE
-            WHEN rpt_staffing_production."Function" = 'Engineering' THEN (COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
-                WHEN rpt_staffing_production.Parameter = 'Reactive Maintenance' THEN 1+ {% parameter rpt_staffing_production.param_reactive_maintenance %}
-                WHEN rpt_staffing_production.Parameter = 'Return Excess RM' THEN 1+ {% parameter rpt_staffing_production.param_returned_excess_rm %}
-                WHEN rpt_staffing_production.Parameter = 'Rework Rate' THEN IIF((rpt_staffing_production."Sub-lot Multiplier") IS NOT NULL
-                                                        , IIF((rpt_staffing_production."Sub-lot")='Sub-lot', (rpt_staffing_production."Sub-lot Multiplier")*(1+ {% parameter rpt_staffing_production.param_sublot %})
-                                                          ,(rpt_staffing_production."Sub-lot Multiplier"))
-                                                        ,1)
-                WHEN rpt_staffing_production.Parameter = 'Deviations' THEN rpt_staffing_deviation.Deviation_Count*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
-                WHEN rpt_staffing_production.Parameter = 'Change Control' THEN (1+{% parameter rpt_staffing_production.param_change_control %})
-                WHEN rpt_staffing_production.Parameter = 'eBR' THEN {% parameter rpt_staffing_production.param_electronic_br %}
-                WHEN rpt_staffing_production.Parameter = 'Paper' THEN 1-{% parameter rpt_staffing_production.param_returned_excess_rm %}
-                ELSE 1
-              END * (1+ (ISNULL((rpt_staffing_production."Average of Rework Rate"), 0)*(1+ {% parameter rpt_staffing_production.param_rework_rate %})))
-                * (1+ (ISNULL((rpt_staffing_production."Average of Idle Time"), 0)*(1+ {% parameter rpt_staffing_production.param_idle_time %})))) ), 0))
-              / (((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
-                                         + SUM("Break Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_break %})
-                                         + SUM("Meeting Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_meeting %})
-                                         + SUM("Training")*(1+ {% parameter rpt_staffing_resource_hrs.param_training %})))
-                  * (SUM("Working days / Year") - SUM("Vacation + holidays")*(1+ {% parameter rpt_staffing_resource_hrs.param_vacations %}))
-                / SUM("Working days / Year"))
-              * SUM("Working days / Month"))
-            ELSE 0
-            END as dim_sf_engineering_avg_ops
-
-        -- Get dimensionalized [SF PP&L avg ops]
-        , CASE
-            WHEN rpt_staffing_production."Function" = 'PP&L' THEN (COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
-                WHEN rpt_staffing_production.Parameter = 'Reactive Maintenance' THEN 1+ {% parameter rpt_staffing_production.param_reactive_maintenance %}
-                WHEN rpt_staffing_production.Parameter = 'Return Excess RM' THEN 1+ {% parameter rpt_staffing_production.param_returned_excess_rm %}
-                WHEN rpt_staffing_production.Parameter = 'Rework Rate' THEN IIF((rpt_staffing_production."Sub-lot Multiplier") IS NOT NULL
-                                                        , IIF((rpt_staffing_production."Sub-lot")='Sub-lot', (rpt_staffing_production."Sub-lot Multiplier")*(1+ {% parameter rpt_staffing_production.param_sublot %})
-                                                          ,(rpt_staffing_production."Sub-lot Multiplier"))
-                                                        ,1)
-                WHEN rpt_staffing_production.Parameter = 'Deviations' THEN rpt_staffing_deviation.Deviation_Count*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
-                WHEN rpt_staffing_production.Parameter = 'Change Control' THEN (1+{% parameter rpt_staffing_production.param_change_control %})
-                WHEN rpt_staffing_production.Parameter = 'eBR' THEN {% parameter rpt_staffing_production.param_electronic_br %}
-                WHEN rpt_staffing_production.Parameter = 'Paper' THEN 1-{% parameter rpt_staffing_production.param_returned_excess_rm %}
-                ELSE 1
-              END * (1+ (ISNULL((rpt_staffing_production."Average of Rework Rate"), 0)*(1+ {% parameter rpt_staffing_production.param_rework_rate %})))
-                * (1+ (ISNULL((rpt_staffing_production."Average of Idle Time"), 0)*(1+ {% parameter rpt_staffing_production.param_idle_time %})))) ), 0))
-              / (((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
-                                         + SUM("Break Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_break %})
-                                         + SUM("Meeting Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_meeting %})
-                                         + SUM("Training")*(1+ {% parameter rpt_staffing_resource_hrs.param_training %})))
-                  * (SUM("Working days / Year") - SUM("Vacation + holidays")*(1+ {% parameter rpt_staffing_resource_hrs.param_vacations %}))
-                / SUM("Working days / Year"))
-              * SUM("Working days / Month"))
-            ELSE 0
-            END as dim_sf_ppl_avg_ops
-
-        -- Get dimensionalized [SF Production Services avg ops]
-        , CASE
-            WHEN rpt_staffing_production."Function" = 'Production Services' THEN (COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
-                WHEN rpt_staffing_production.Parameter = 'Reactive Maintenance' THEN 1+ {% parameter rpt_staffing_production.param_reactive_maintenance %}
-                WHEN rpt_staffing_production.Parameter = 'Return Excess RM' THEN 1+ {% parameter rpt_staffing_production.param_returned_excess_rm %}
-                WHEN rpt_staffing_production.Parameter = 'Rework Rate' THEN IIF((rpt_staffing_production."Sub-lot Multiplier") IS NOT NULL
-                                                        , IIF((rpt_staffing_production."Sub-lot")='Sub-lot', (rpt_staffing_production."Sub-lot Multiplier")*(1+ {% parameter rpt_staffing_production.param_sublot %})
-                                                          ,(rpt_staffing_production."Sub-lot Multiplier"))
-                                                        ,1)
-                WHEN rpt_staffing_production.Parameter = 'Deviations' THEN rpt_staffing_deviation.Deviation_Count*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
-                WHEN rpt_staffing_production.Parameter = 'Change Control' THEN (1+{% parameter rpt_staffing_production.param_change_control %})
-                WHEN rpt_staffing_production.Parameter = 'eBR' THEN {% parameter rpt_staffing_production.param_electronic_br %}
-                WHEN rpt_staffing_production.Parameter = 'Paper' THEN 1-{% parameter rpt_staffing_production.param_returned_excess_rm %}
-                ELSE 1
-              END * (1+ (ISNULL((rpt_staffing_production."Average of Rework Rate"), 0)*(1+ {% parameter rpt_staffing_production.param_rework_rate %})))
-                * (1+ (ISNULL((rpt_staffing_production."Average of Idle Time"), 0)*(1+ {% parameter rpt_staffing_production.param_idle_time %})))) ), 0))
-              / (((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
-                                         + SUM("Break Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_break %})
-                                         + SUM("Meeting Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_meeting %})
-                                         + SUM("Training")*(1+ {% parameter rpt_staffing_resource_hrs.param_training %})))
-                  * (SUM("Working days / Year") - SUM("Vacation + holidays")*(1+ {% parameter rpt_staffing_resource_hrs.param_vacations %}))
-                / SUM("Working days / Year"))
-              * SUM("Working days / Month"))
-            ELSE 0
-            END as dim_sf_production_services_avg_ops
-
-        -- Get dimensionalized [SF MSAT  avg ops]
-        , CASE
-            WHEN rpt_staffing_production."Function" = 'MSAT' THEN (COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
-                WHEN rpt_staffing_production.Parameter = 'Reactive Maintenance' THEN 1+ {% parameter rpt_staffing_production.param_reactive_maintenance %}
-                WHEN rpt_staffing_production.Parameter = 'Return Excess RM' THEN 1+ {% parameter rpt_staffing_production.param_returned_excess_rm %}
-                WHEN rpt_staffing_production.Parameter = 'Rework Rate' THEN IIF((rpt_staffing_production."Sub-lot Multiplier") IS NOT NULL
-                                                        , IIF((rpt_staffing_production."Sub-lot")='Sub-lot', (rpt_staffing_production."Sub-lot Multiplier")*(1+ {% parameter rpt_staffing_production.param_sublot %})
-                                                          ,(rpt_staffing_production."Sub-lot Multiplier"))
-                                                        ,1)
-                WHEN rpt_staffing_production.Parameter = 'Deviations' THEN rpt_staffing_deviation.Deviation_Count*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
-                WHEN rpt_staffing_production.Parameter = 'Change Control' THEN (1+{% parameter rpt_staffing_production.param_change_control %})
-                WHEN rpt_staffing_production.Parameter = 'eBR' THEN {% parameter rpt_staffing_production.param_electronic_br %}
-                WHEN rpt_staffing_production.Parameter = 'Paper' THEN 1-{% parameter rpt_staffing_production.param_returned_excess_rm %}
-                ELSE 1
-              END * (1+ (ISNULL((rpt_staffing_production."Average of Rework Rate"), 0)*(1+ {% parameter rpt_staffing_production.param_rework_rate %})))
-                * (1+ (ISNULL((rpt_staffing_production."Average of Idle Time"), 0)*(1+ {% parameter rpt_staffing_production.param_idle_time %})))) ), 0))
-              / (((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
-                                         + SUM("Break Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_break %})
-                                         + SUM("Meeting Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_meeting %})
-                                         + SUM("Training")*(1+ {% parameter rpt_staffing_resource_hrs.param_training %})))
-                  * (SUM("Working days / Year") - SUM("Vacation + holidays")*(1+ {% parameter rpt_staffing_resource_hrs.param_vacations %}))
-                / SUM("Working days / Year"))
-              * SUM("Working days / Month"))
-            ELSE 0
-            END as dim_sf_msat_avg_ops
-
-        -- Get dimensionalized [SF Mfg Support avg ops]
-        , CASE
-            WHEN rpt_staffing_production."Function" = 'Manufacturing' and
-                (rpt_staffing_resource_hrs."Sub-Function" = 'Deviations Investigation' or rpt_staffing_resource_hrs."Sub-Function" = 'Production Services')
+            WHEN rpt_staffing_production."Function" = 'Manufacturing' and rpt_staffing_production."Asset" = '20K' and rpt_staffing_production."Suite" = 'Downstream'
               THEN (COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
                 WHEN rpt_staffing_production.Parameter = 'Reactive Maintenance' THEN 1+ {% parameter rpt_staffing_production.param_reactive_maintenance %}
                 WHEN rpt_staffing_production.Parameter = 'Return Excess RM' THEN 1+ {% parameter rpt_staffing_production.param_returned_excess_rm %}
@@ -179,15 +23,197 @@ view: include_t_activity_month {
                 ELSE 1
               END * (1+ (ISNULL((rpt_staffing_production."Average of Rework Rate"), 0)*(1+ {% parameter rpt_staffing_production.param_rework_rate %})))
                 * (1+ (ISNULL((rpt_staffing_production."Average of Idle Time"), 0)*(1+ {% parameter rpt_staffing_production.param_idle_time %})))) ), 0))
-              / (((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
+              / ((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
                                          + SUM("Break Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_break %})
                                          + SUM("Meeting Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_meeting %})
                                          + SUM("Training")*(1+ {% parameter rpt_staffing_resource_hrs.param_training %})))
                   * (SUM("Working days / Year") - SUM("Vacation + holidays")*(1+ {% parameter rpt_staffing_resource_hrs.param_vacations %}))
                 / SUM("Working days / Year"))
-              * SUM("Working days / Month"))
             ELSE 0
-            END as dim_sf_manufacturing_avg_ops
+            END as dim_prd_20k_dsp_avg_ops
+
+        -- Get dimensionalized [Prd 20K USP avg ops]
+        , CASE
+            WHEN rpt_staffing_production."Function" = 'Manufacturing' and rpt_staffing_production."Asset" = '20K' and rpt_staffing_production."Suite" = 'Upstream'
+              THEN (COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
+                WHEN rpt_staffing_production.Parameter = 'Reactive Maintenance' THEN 1+ {% parameter rpt_staffing_production.param_reactive_maintenance %}
+                WHEN rpt_staffing_production.Parameter = 'Return Excess RM' THEN 1+ {% parameter rpt_staffing_production.param_returned_excess_rm %}
+                WHEN rpt_staffing_production.Parameter = 'Rework Rate' THEN IIF((rpt_staffing_production."Sub-lot Multiplier") IS NOT NULL
+                                                        , IIF((rpt_staffing_production."Sub-lot")='Sub-lot', (rpt_staffing_production."Sub-lot Multiplier")*(1+ {% parameter rpt_staffing_production.param_sublot %})
+                                                          ,(rpt_staffing_production."Sub-lot Multiplier"))
+                                                        ,1)
+                WHEN rpt_staffing_production.Parameter = 'Deviations' THEN rpt_staffing_deviation.Deviation_Count*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
+                WHEN rpt_staffing_production.Parameter = 'Change Control' THEN (1+{% parameter rpt_staffing_production.param_change_control %})
+                WHEN rpt_staffing_production.Parameter = 'eBR' THEN {% parameter rpt_staffing_production.param_electronic_br %}
+                WHEN rpt_staffing_production.Parameter = 'Paper' THEN 1-{% parameter rpt_staffing_production.param_returned_excess_rm %}
+                ELSE 1
+              END * (1+ (ISNULL((rpt_staffing_production."Average of Rework Rate"), 0)*(1+ {% parameter rpt_staffing_production.param_rework_rate %})))
+                * (1+ (ISNULL((rpt_staffing_production."Average of Idle Time"), 0)*(1+ {% parameter rpt_staffing_production.param_idle_time %})))) ), 0))
+              / ((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
+                                         + SUM("Break Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_break %})
+                                         + SUM("Meeting Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_meeting %})
+                                         + SUM("Training")*(1+ {% parameter rpt_staffing_resource_hrs.param_training %})))
+                  * (SUM("Working days / Year") - SUM("Vacation + holidays")*(1+ {% parameter rpt_staffing_resource_hrs.param_vacations %}))
+                / SUM("Working days / Year"))
+            ELSE 0
+            END as dim_prd_20k_usp_avg_ops
+
+        -- Get dimensionalized [Prd 5K DSP avg ops]
+        , CASE
+            WHEN rpt_staffing_production."Function" = 'Manufacturing' and rpt_staffing_production."Asset" = '5K' and rpt_staffing_production."Suite" = 'Downstream'
+              THEN (COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
+                WHEN rpt_staffing_production.Parameter = 'Reactive Maintenance' THEN 1+ {% parameter rpt_staffing_production.param_reactive_maintenance %}
+                WHEN rpt_staffing_production.Parameter = 'Return Excess RM' THEN 1+ {% parameter rpt_staffing_production.param_returned_excess_rm %}
+                WHEN rpt_staffing_production.Parameter = 'Rework Rate' THEN IIF((rpt_staffing_production."Sub-lot Multiplier") IS NOT NULL
+                                                        , IIF((rpt_staffing_production."Sub-lot")='Sub-lot', (rpt_staffing_production."Sub-lot Multiplier")*(1+ {% parameter rpt_staffing_production.param_sublot %})
+                                                          ,(rpt_staffing_production."Sub-lot Multiplier"))
+                                                        ,1)
+                WHEN rpt_staffing_production.Parameter = 'Deviations' THEN rpt_staffing_deviation.Deviation_Count*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
+                WHEN rpt_staffing_production.Parameter = 'Change Control' THEN (1+{% parameter rpt_staffing_production.param_change_control %})
+                WHEN rpt_staffing_production.Parameter = 'eBR' THEN {% parameter rpt_staffing_production.param_electronic_br %}
+                WHEN rpt_staffing_production.Parameter = 'Paper' THEN 1-{% parameter rpt_staffing_production.param_returned_excess_rm %}
+                ELSE 1
+              END * (1+ (ISNULL((rpt_staffing_production."Average of Rework Rate"), 0)*(1+ {% parameter rpt_staffing_production.param_rework_rate %})))
+                * (1+ (ISNULL((rpt_staffing_production."Average of Idle Time"), 0)*(1+ {% parameter rpt_staffing_production.param_idle_time %})))) ), 0))
+              / ((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
+                                         + SUM("Break Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_break %})
+                                         + SUM("Meeting Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_meeting %})
+                                         + SUM("Training")*(1+ {% parameter rpt_staffing_resource_hrs.param_training %})))
+                  * (SUM("Working days / Year") - SUM("Vacation + holidays")*(1+ {% parameter rpt_staffing_resource_hrs.param_vacations %}))
+                / SUM("Working days / Year"))
+            ELSE 0
+            END as dim_prd_5k_dsp_avg_ops
+
+        -- Get dimensionalized [Prd 5K USP avg ops]
+        , CASE
+            WHEN rpt_staffing_production."Function" = 'Manufacturing' and rpt_staffing_production."Asset" = '5K' and rpt_staffing_production."Suite" = 'Upstream'
+              THEN (COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
+                WHEN rpt_staffing_production.Parameter = 'Reactive Maintenance' THEN 1+ {% parameter rpt_staffing_production.param_reactive_maintenance %}
+                WHEN rpt_staffing_production.Parameter = 'Return Excess RM' THEN 1+ {% parameter rpt_staffing_production.param_returned_excess_rm %}
+                WHEN rpt_staffing_production.Parameter = 'Rework Rate' THEN IIF((rpt_staffing_production."Sub-lot Multiplier") IS NOT NULL
+                                                        , IIF((rpt_staffing_production."Sub-lot")='Sub-lot', (rpt_staffing_production."Sub-lot Multiplier")*(1+ {% parameter rpt_staffing_production.param_sublot %})
+                                                          ,(rpt_staffing_production."Sub-lot Multiplier"))
+                                                        ,1)
+                WHEN rpt_staffing_production.Parameter = 'Deviations' THEN rpt_staffing_deviation.Deviation_Count*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
+                WHEN rpt_staffing_production.Parameter = 'Change Control' THEN (1+{% parameter rpt_staffing_production.param_change_control %})
+                WHEN rpt_staffing_production.Parameter = 'eBR' THEN {% parameter rpt_staffing_production.param_electronic_br %}
+                WHEN rpt_staffing_production.Parameter = 'Paper' THEN 1-{% parameter rpt_staffing_production.param_returned_excess_rm %}
+                ELSE 1
+              END * (1+ (ISNULL((rpt_staffing_production."Average of Rework Rate"), 0)*(1+ {% parameter rpt_staffing_production.param_rework_rate %})))
+                * (1+ (ISNULL((rpt_staffing_production."Average of Idle Time"), 0)*(1+ {% parameter rpt_staffing_production.param_idle_time %})))) ), 0))
+              / ((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
+                                         + SUM("Break Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_break %})
+                                         + SUM("Meeting Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_meeting %})
+                                         + SUM("Training")*(1+ {% parameter rpt_staffing_resource_hrs.param_training %})))
+                  * (SUM("Working days / Year") - SUM("Vacation + holidays")*(1+ {% parameter rpt_staffing_resource_hrs.param_vacations %}))
+                / SUM("Working days / Year"))
+            ELSE 0
+            END as dim_prd_5k_usp_avg_ops
+
+        -- Get dimensionalized [Prd Mono DSP avg ops]
+        , CASE
+            WHEN rpt_staffing_production."Function" = 'Manufacturing' and rpt_staffing_production."Asset" = 'Mono' and rpt_staffing_production."Suite" = 'Downstream'
+              THEN (COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
+                WHEN rpt_staffing_production.Parameter = 'Reactive Maintenance' THEN 1+ {% parameter rpt_staffing_production.param_reactive_maintenance %}
+                WHEN rpt_staffing_production.Parameter = 'Return Excess RM' THEN 1+ {% parameter rpt_staffing_production.param_returned_excess_rm %}
+                WHEN rpt_staffing_production.Parameter = 'Rework Rate' THEN IIF((rpt_staffing_production."Sub-lot Multiplier") IS NOT NULL
+                                                        , IIF((rpt_staffing_production."Sub-lot")='Sub-lot', (rpt_staffing_production."Sub-lot Multiplier")*(1+ {% parameter rpt_staffing_production.param_sublot %})
+                                                          ,(rpt_staffing_production."Sub-lot Multiplier"))
+                                                        ,1)
+                WHEN rpt_staffing_production.Parameter = 'Deviations' THEN rpt_staffing_deviation.Deviation_Count*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
+                WHEN rpt_staffing_production.Parameter = 'Change Control' THEN (1+{% parameter rpt_staffing_production.param_change_control %})
+                WHEN rpt_staffing_production.Parameter = 'eBR' THEN {% parameter rpt_staffing_production.param_electronic_br %}
+                WHEN rpt_staffing_production.Parameter = 'Paper' THEN 1-{% parameter rpt_staffing_production.param_returned_excess_rm %}
+                ELSE 1
+              END * (1+ (ISNULL((rpt_staffing_production."Average of Rework Rate"), 0)*(1+ {% parameter rpt_staffing_production.param_rework_rate %})))
+                * (1+ (ISNULL((rpt_staffing_production."Average of Idle Time"), 0)*(1+ {% parameter rpt_staffing_production.param_idle_time %})))) ), 0))
+              / ((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
+                                         + SUM("Break Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_break %})
+                                         + SUM("Meeting Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_meeting %})
+                                         + SUM("Training")*(1+ {% parameter rpt_staffing_resource_hrs.param_training %})))
+                  * (SUM("Working days / Year") - SUM("Vacation + holidays")*(1+ {% parameter rpt_staffing_resource_hrs.param_vacations %}))
+                / SUM("Working days / Year"))
+            ELSE 0
+            END as dim_prd_mono_dsp_avg_ops
+
+        -- Get dimensionalized [Prd Mono USP avg ops]
+        , CASE
+            WHEN rpt_staffing_production."Function" = 'Manufacturing' and rpt_staffing_production."Asset" = 'Mono' and rpt_staffing_production."Suite" = 'Upstream'
+              THEN (COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
+                WHEN rpt_staffing_production.Parameter = 'Reactive Maintenance' THEN 1+ {% parameter rpt_staffing_production.param_reactive_maintenance %}
+                WHEN rpt_staffing_production.Parameter = 'Return Excess RM' THEN 1+ {% parameter rpt_staffing_production.param_returned_excess_rm %}
+                WHEN rpt_staffing_production.Parameter = 'Rework Rate' THEN IIF((rpt_staffing_production."Sub-lot Multiplier") IS NOT NULL
+                                                        , IIF((rpt_staffing_production."Sub-lot")='Sub-lot', (rpt_staffing_production."Sub-lot Multiplier")*(1+ {% parameter rpt_staffing_production.param_sublot %})
+                                                          ,(rpt_staffing_production."Sub-lot Multiplier"))
+                                                        ,1)
+                WHEN rpt_staffing_production.Parameter = 'Deviations' THEN rpt_staffing_deviation.Deviation_Count*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
+                WHEN rpt_staffing_production.Parameter = 'Change Control' THEN (1+{% parameter rpt_staffing_production.param_change_control %})
+                WHEN rpt_staffing_production.Parameter = 'eBR' THEN {% parameter rpt_staffing_production.param_electronic_br %}
+                WHEN rpt_staffing_production.Parameter = 'Paper' THEN 1-{% parameter rpt_staffing_production.param_returned_excess_rm %}
+                ELSE 1
+              END * (1+ (ISNULL((rpt_staffing_production."Average of Rework Rate"), 0)*(1+ {% parameter rpt_staffing_production.param_rework_rate %})))
+                * (1+ (ISNULL((rpt_staffing_production."Average of Idle Time"), 0)*(1+ {% parameter rpt_staffing_production.param_idle_time %})))) ), 0))
+              / ((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
+                                         + SUM("Break Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_break %})
+                                         + SUM("Meeting Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_meeting %})
+                                         + SUM("Training")*(1+ {% parameter rpt_staffing_resource_hrs.param_training %})))
+                  * (SUM("Working days / Year") - SUM("Vacation + holidays")*(1+ {% parameter rpt_staffing_resource_hrs.param_vacations %}))
+                / SUM("Working days / Year"))
+            ELSE 0
+            END as dim_prd_mono_usp_avg_ops
+
+        -- Get dimensionalized [Prd CT USP avg ops]
+        , CASE
+            WHEN rpt_staffing_production."Function" = 'Manufacturing' and rpt_staffing_production."Asset" = 'CT' and rpt_staffing_production."Suite" = 'Upstream'
+              THEN (COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
+                WHEN rpt_staffing_production.Parameter = 'Reactive Maintenance' THEN 1+ {% parameter rpt_staffing_production.param_reactive_maintenance %}
+                WHEN rpt_staffing_production.Parameter = 'Return Excess RM' THEN 1+ {% parameter rpt_staffing_production.param_returned_excess_rm %}
+                WHEN rpt_staffing_production.Parameter = 'Rework Rate' THEN IIF((rpt_staffing_production."Sub-lot Multiplier") IS NOT NULL
+                                                        , IIF((rpt_staffing_production."Sub-lot")='Sub-lot', (rpt_staffing_production."Sub-lot Multiplier")*(1+ {% parameter rpt_staffing_production.param_sublot %})
+                                                          ,(rpt_staffing_production."Sub-lot Multiplier"))
+                                                        ,1)
+                WHEN rpt_staffing_production.Parameter = 'Deviations' THEN rpt_staffing_deviation.Deviation_Count*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
+                WHEN rpt_staffing_production.Parameter = 'Change Control' THEN (1+{% parameter rpt_staffing_production.param_change_control %})
+                WHEN rpt_staffing_production.Parameter = 'eBR' THEN {% parameter rpt_staffing_production.param_electronic_br %}
+                WHEN rpt_staffing_production.Parameter = 'Paper' THEN 1-{% parameter rpt_staffing_production.param_returned_excess_rm %}
+                ELSE 1
+              END * (1+ (ISNULL((rpt_staffing_production."Average of Rework Rate"), 0)*(1+ {% parameter rpt_staffing_production.param_rework_rate %})))
+                * (1+ (ISNULL((rpt_staffing_production."Average of Idle Time"), 0)*(1+ {% parameter rpt_staffing_production.param_idle_time %})))) ), 0))
+              / ((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
+                                         + SUM("Break Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_break %})
+                                         + SUM("Meeting Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_meeting %})
+                                         + SUM("Training")*(1+ {% parameter rpt_staffing_resource_hrs.param_training %})))
+                  * (SUM("Working days / Year") - SUM("Vacation + holidays")*(1+ {% parameter rpt_staffing_resource_hrs.param_vacations %}))
+                / SUM("Working days / Year"))
+            ELSE 0
+            END as dim_prd_ct_usp_avg_ops
+
+        -- Get dimensionalized [Prd P5 DSP avg ops]
+        , CASE
+            WHEN rpt_staffing_production."Function" = 'Manufacturing' and rpt_staffing_production."Asset" = 'P5' and rpt_staffing_production."Suite" = 'Downstream'
+              THEN (COALESCE(SUM(((rpt_staffing_production."Sum of Person-hours") * CASE
+                WHEN rpt_staffing_production.Parameter = 'Reactive Maintenance' THEN 1+ {% parameter rpt_staffing_production.param_reactive_maintenance %}
+                WHEN rpt_staffing_production.Parameter = 'Return Excess RM' THEN 1+ {% parameter rpt_staffing_production.param_returned_excess_rm %}
+                WHEN rpt_staffing_production.Parameter = 'Rework Rate' THEN IIF((rpt_staffing_production."Sub-lot Multiplier") IS NOT NULL
+                                                        , IIF((rpt_staffing_production."Sub-lot")='Sub-lot', (rpt_staffing_production."Sub-lot Multiplier")*(1+ {% parameter rpt_staffing_production.param_sublot %})
+                                                          ,(rpt_staffing_production."Sub-lot Multiplier"))
+                                                        ,1)
+                WHEN rpt_staffing_production.Parameter = 'Deviations' THEN rpt_staffing_deviation.Deviation_Count*(1+ {% parameter rpt_staffing_deviation.param_deviations %})
+                WHEN rpt_staffing_production.Parameter = 'Change Control' THEN (1+{% parameter rpt_staffing_production.param_change_control %})
+                WHEN rpt_staffing_production.Parameter = 'eBR' THEN {% parameter rpt_staffing_production.param_electronic_br %}
+                WHEN rpt_staffing_production.Parameter = 'Paper' THEN 1-{% parameter rpt_staffing_production.param_returned_excess_rm %}
+                ELSE 1
+              END * (1+ (ISNULL((rpt_staffing_production."Average of Rework Rate"), 0)*(1+ {% parameter rpt_staffing_production.param_rework_rate %})))
+                * (1+ (ISNULL((rpt_staffing_production."Average of Idle Time"), 0)*(1+ {% parameter rpt_staffing_production.param_idle_time %})))) ), 0))
+              / ((SUM("Shift Duration") - (SUM("Gowning Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_gowning %})
+                                         + SUM("Break Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_break %})
+                                         + SUM("Meeting Time")*(1+ {% parameter rpt_staffing_resource_hrs.param_meeting %})
+                                         + SUM("Training")*(1+ {% parameter rpt_staffing_resource_hrs.param_training %})))
+                  * (SUM("Working days / Year") - SUM("Vacation + holidays")*(1+ {% parameter rpt_staffing_resource_hrs.param_vacations %}))
+                / SUM("Working days / Year"))
+            ELSE 0
+            END as dim_prd_p5_dsp_avg_ops
+
       FROM dbo.RPT_Staffing_Production  AS rpt_staffing_production
       LEFT JOIN dbo.RPT_Staffing_Schedule  AS rpt_staffing_schedule ON (rpt_staffing_production."Join Identifier for Schd")
             = (rpt_staffing_schedule."Join Identifier for Schd")
@@ -197,122 +223,119 @@ view: include_t_activity_month {
             AND (rpt_staffing_production."Join Identifier - Mgmt") = (rpt_staffing_deviation."Join_Identifier_-_Mgmt")
             AND (rpt_staffing_production."Join Identifier - Resources") = (rpt_staffing_deviation."Join_Identifier_-_Resources")
 
-      GROUP BY CONVERT(VARCHAR(7),dateadd(day, (rpt_staffing_production."Day of Operations"), (CONVERT(VARCHAR(10),rpt_staffing_schedule."Start Date" ,120))) ,120)
-        , rpt_staffing_production."Function", rpt_staffing_resource_hrs."Sub-Function"
-       ;;
+      GROUP BY CONVERT(VARCHAR(10),dateadd(day, (rpt_staffing_production."Day of Operations"), (CONVERT(VARCHAR(10),rpt_staffing_schedule."Start Date" ,120))) ,120)
+        , rpt_staffing_production."Function", rpt_staffing_production."Asset", rpt_staffing_production."Suite" ;;
   }
 
-
-###### Dimensions ######
-  dimension: t_activity_month {
+  ###### Dimensions ######
+  dimension: row_number {
     primary_key: yes
-    type: string
-    sql: ${TABLE}.t_activity_month ;;
+    type: number
+    sql: ${TABLE}.row_number ;;
     hidden: yes
   }
 
-  dimension: dim_sf_qc_avg_ops {
+  dimension: t_activity_date {
     type: string
-    sql: ${TABLE}.dim_sf_qc_avg_ops ;;
+    sql: ${TABLE}.t_activity_date ;;
     hidden: yes
   }
 
-  dimension: dim_sf_qa_avg_ops {
+  dimension: dim_prd_20k_dsp_avg_ops {
     type: string
-    sql: ${TABLE}.dim_sf_qa_avg_ops ;;
+    sql: ${TABLE}.dim_prd_20k_dsp_avg_ops ;;
     hidden: yes
   }
 
-  dimension: dim_sf_engineering_avg_ops {
+  dimension: dim_prd_20k_usp_avg_ops {
     type: string
-    sql: ${TABLE}.dim_sf_engineering_avg_ops ;;
+    sql: ${TABLE}.dim_prd_20k_usp_avg_ops ;;
     hidden: yes
   }
 
-  dimension: dim_sf_ppl_avg_ops {
+  dimension: dim_prd_5k_dsp_avg_ops {
     type: string
-    sql: ${TABLE}.dim_sf_ppl_avg_ops ;;
+    sql: ${TABLE}.dim_prd_5k_dsp_avg_ops ;;
     hidden: yes
   }
 
-  dimension: dim_sf_production_services_avg_ops {
+  dimension: dim_prd_5k_usp_avg_ops {
     type: string
-    sql: ${TABLE}.dim_sf_production_services_avg_ops ;;
+    sql: ${TABLE}.dim_prd_5k_usp_avg_ops ;;
     hidden: yes
   }
 
-  dimension: dim_sf_msat_avg_ops {
+  dimension: dim_prd_mono_dsp_avg_ops {
     type: string
-    sql: ${TABLE}.dim_sf_msat_avg_ops ;;
+    sql: ${TABLE}.dim_prd_mono_dsp_avg_ops ;;
     hidden: yes
   }
 
-  dimension: dim_sf_manufacturing_avg_ops {
+  dimension: dim_prd_mono_usp_avg_ops {
     type: string
-    sql: ${TABLE}.dim_sf_manufacturing_avg_ops ;;
+    sql: ${TABLE}.dim_prd_mono_usp_avg_ops ;;
     hidden: yes
   }
 
-###### Measures ######
-  measure: sf_qc_avg_ops {
-    label: "SF QC Avg Ops"
+  dimension: dim_prd_ct_usp_avg_ops {
+    type: string
+    sql: ${TABLE}.dim_prd_ct_usp_avg_ops ;;
+    hidden: yes
+  }
+
+  dimension: dim_prd_p5_dsp_avg_ops {
+    type: string
+    sql: ${TABLE}.dim_prd_p5_dsp_avg_ops ;;
+    hidden: yes
+  }
+
+  ###### Measures ######
+  measure: prd_20k_dsp_avg_ops {
     type: average
-    sql: ${dim_sf_qc_avg_ops} ;;
+    sql: ${dim_prd_20k_dsp_avg_ops} ;;
     value_format_name: decimal_0
   }
 
-  measure: sf_qa_avg_ops {
-    label: "SF QA Avg Ops"
+  measure: prd_20k_usp_avg_ops {
     type: average
-    sql: ${dim_sf_qa_avg_ops} ;;
+    sql: ${dim_prd_20k_usp_avg_ops} ;;
     value_format_name: decimal_0
   }
 
-  measure: sf_engineering_avg_ops {
-    label: "SF Engineering Avg Ops"
+  measure: prd_5k_dsp_avg_ops {
     type: average
-    sql: ${dim_sf_engineering_avg_ops} ;;
+    sql: ${dim_prd_5k_dsp_avg_ops} ;;
     value_format_name: decimal_0
   }
 
-  measure: sf_ppl_avg_ops {
-    label: "SF PP&L Avg Ops"
+  measure: prd_5k_usp_avg_ops {
     type: average
-    sql: ${dim_sf_ppl_avg_ops} ;;
+    sql: ${dim_prd_5k_usp_avg_ops} ;;
     value_format_name: decimal_0
   }
 
-  measure: sf_production_services_avg_ops {
-    label: "SF Production Services Avg Ops"
+  measure: prd_mono_dsp_avg_ops {
     type: average
-    sql: ${dim_sf_production_services_avg_ops} ;;
+    sql: ${dim_prd_mono_dsp_avg_ops} ;;
     value_format_name: decimal_0
   }
 
-  measure: sf_msat_avg_ops {
-    label: "SF MSAT Avg Ops"
+  measure: prd_mono_usp_avg_ops {
     type: average
-    sql: ${dim_sf_msat_avg_ops} ;;
+    sql: ${dim_prd_mono_usp_avg_ops} ;;
     value_format_name: decimal_0
   }
 
-  measure: sf_mfg_support_avg_ops {
-    label: "SF Mfg Support Avg Ops"
+  measure: prd_ct_usp_avg_ops {
     type: average
-    sql: ${dim_sf_manufacturing_avg_ops} ;;
+    sql: ${dim_prd_ct_usp_avg_ops} ;;
     value_format_name: decimal_0
   }
 
-  set: detail {
-    fields: [
-      t_activity_month,
-      dim_sf_qc_avg_ops,
-      dim_sf_qa_avg_ops,
-      dim_sf_engineering_avg_ops,
-      dim_sf_ppl_avg_ops,
-      dim_sf_production_services_avg_ops,
-      dim_sf_msat_avg_ops,
-      dim_sf_manufacturing_avg_ops
-    ]
+  measure: prd_p5_dsp_avg_ops {
+    type: average
+    sql: ${dim_prd_p5_dsp_avg_ops} ;;
+    value_format_name: decimal_0
   }
+
 }

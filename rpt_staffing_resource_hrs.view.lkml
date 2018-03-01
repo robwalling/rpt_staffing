@@ -448,25 +448,25 @@ view: rpt_staffing_resource_hrs {
 
   measure: variable_gowning_time {
     type: number
-    sql: ${total_gowning_time} * (1+ {% parameter param_gowning %} ;;
+    sql: ${total_gowning_time} * (1+ {% parameter param_gowning %}) ;;
     value_format_name: decimal_0
   }
 
   measure: variable_meeting_time {
     type: number
-    sql: ${total_meeting_time} * (1+ {% parameter param_meeting %} ;;
+    sql: ${total_meeting_time} * (1+ {% parameter param_meeting %}) ;;
     value_format_name: decimal_0
   }
 
   measure: variable_training_hours {
     type: number
-    sql: ${total_training} * (1+ {% parameter param_training %} ;;
+    sql: ${total_training} * (1+ {% parameter param_training %}) ;;
     value_format_name: decimal_0
   }
 
   measure: variable_vacations {
     type: number
-    sql: ${total_vacation_holidays} * (1+ {% parameter param_vacations %} ;;
+    sql: ${total_vacation_holidays} * (1+ {% parameter param_vacations %}) ;;
     value_format_name: decimal_0
   }
 
@@ -476,5 +476,6 @@ view: rpt_staffing_resource_hrs {
               + ${variable_meeting_time} + ${variable_training_hours})) *
             (${total_working_days_year} - ${variable_vacations}))
           / ${total_working_days_year} ;;
+    value_format_name: decimal_3
   }
 }

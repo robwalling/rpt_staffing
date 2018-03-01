@@ -45,6 +45,13 @@ explore: rpt_staffing_production {
     relationship: one_to_one
   }
 
+  join: include_t_activity_date {
+    view_label: "Rpt Staffing Production"
+    sql_on: ${rpt_staffing_production.t_activity_date} = ${include_t_activity_date.t_activity_date} ;;
+    type: left_outer
+    relationship: many_to_many
+  }
+
   join: include_t_activity_month {
     view_label: "Rpt Staffing Production"
     sql_on: ${rpt_staffing_production.t_activity_month} = ${include_t_activity_month.t_activity_month} ;;
