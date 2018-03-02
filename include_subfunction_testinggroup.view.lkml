@@ -10,6 +10,7 @@ view: include_subfunction_testinggroup {
 
   parameter: param_span_of_control {
     label: "Span of Control"
+    default_value: "0.20"
     type: number
     allowed_value: {label: "-100%" value: "-1.00"}
     allowed_value: {label: "-90%" value: "-0.90"}
@@ -84,7 +85,7 @@ view: include_subfunction_testinggroup {
     label: "T SOC V"
     type: number
     sql: (${sum_avg_sup_soc} / ${sum_avg_hc_opers_only})
-          * (1+ {% parameter param_span_of_control %}  ;;
+          * (1+ {% parameter param_span_of_control %})  ;;
   }
 
   set: detail {

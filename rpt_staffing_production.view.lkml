@@ -400,60 +400,60 @@ view: rpt_staffing_production {
   measure: total_days_of_operations {
     type: sum
     sql: ${day_of_operations} ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: total_person_hours {
     type: sum
     sql: ${sum_of_personhours} ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: total_sublot {
     label: "Sub-lot Multiplier"
     type: sum
     sql: ${sublot} ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
 #   measure: t_v_person_hours {
 #     type: number
 #     sql: ${total_person_hours} * ${parameter_control} * (1+ ${t_rework_work_calculation})
 #       * (1+ ${t_idle_time_calculation}) ;;
-#     value_format_name: decimal_0
+#     value_format_name: decimal_1
 #   }
 
   dimension: t_v_person_hours {
     type: number
     sql: ${sum_of_personhours} * ${parameter_control} * (1+ ${t_rework_work_calculation})
       * (1+ ${t_idle_time_calculation}) ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: total_average_of_rework_rate {
     type: sum
     sql: ${average_of_rework_rate} ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: total_average_of_idle_time {
     type: sum
     sql: ${average_of_idle_time} ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
 #   measure: t_v_ftes {
 #     label: "T V FTEs"
 #     type: number
 #     sql: ${total_t_v_person_hours} / ${rpt_staffing_resource_hrs.v_productive_shift_hours} ;;
-#     value_format_name: decimal_0
+#     value_format_name: decimal_1
 #   }
 
   dimension: t_v_ftes {
     label: "T V FTEs"
     type: number
     sql: ${t_v_person_hours} / nullif(${rpt_staffing_resource_hrs.v_productive_shift_hours},0) ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: total_t_v_ftes {
@@ -473,7 +473,7 @@ view: rpt_staffing_production {
   measure: total_t_v_person_hours {
     type: sum      # Rebecca changed this to number due to LookML errors #Maire changed this back to a sum
     sql: ${t_v_person_hours} ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
 # ------ Rebecca changed these back to measures due to LookML errors ------
@@ -486,13 +486,13 @@ view: rpt_staffing_production {
 #   measure: t_rework_work_calculation {
 #     type: number
 #     sql: ISNULL(${total_average_of_rework_rate}, 0)*(1+ {% parameter param_rework_rate %});;
-#     value_format_name: decimal_0
+#     value_format_name: decimal_1
 #   }
 #
 #   measure: t_idle_time_calculation {
 #     type: number
 #     sql: ISNULL(${total_average_of_idle_time}, 0)*(1+ {% parameter param_idle_time %});;
-#     value_format_name: decimal_0
+#     value_format_name: decimal_1
 #   }
 
   dimension: t_rework_work_calculation {
@@ -513,32 +513,68 @@ view: rpt_staffing_production {
 #  measure: total_t_rework_work_calculation {
 #    type: number      # Rebecca changed this to number due to LookML errors
 #    sql: ${t_rework_work_calculation};;
-#    value_format_name: decimal_0
+#    value_format_name: decimal_1
 #  }
 #
 #  measure: total_t_idle_time_calculation {
 #    type: number      # Rebecca changed this to number due to LookML errors
 #    sql: ${t_idle_time_calculation};;
-#    value_format_name: decimal_0
+#    value_format_name: decimal_1
 #  }
 # -----------------------------------------------------------------------------------------------
 
-  measure: t_direct_ftes {
-    label: "T Direct FTEs"
+  measure: agg_sl_total_ftes {
+    label: "AGG(SL Total FTEs)"
     type: number
-    sql: CASE WHEN ${labour} = 'Direct' THEN ${t_v_ftes}
-              ELSE 0
-              END ;;
-    value_format_name: decimal_0
+    sql: ISNULL(${sl_total_ops_direct_using_ratio},0) + ISNULL(${sl_total_ops_indirect_using_ratio},0)
+          + ISNULL(${rpt_staffing_resource_hrs.sl_total_supervisors_direct},0)
+          + ISNULL(${rpt_staffing_resource_hrs.sl_total_supervisors_indirect},0)
+          + ${include_function_subfunction.mgmt_count};;
   }
 
-  measure: t_indirect_ftes {
-    label: "T Indirect FTEs"
+  measure: sl_total_ops_direct_using_ratio {
+    label: "SL Total Ops - Direct - Using Ratio"
     type: number
-    sql: CASE WHEN ${labour} = 'Indirect' THEN ${t_v_ftes}
-              ELSE 0
-              END ;;
-    value_format_name: decimal_0
+    sql: ${sl_total_ops} * ${direct_total_ftes} * 0.94701
+          + CASE WHEN ${t_activity_year} = 2017 THEN 2.8
+                 WHEN ${t_activity_year} = 2018 THEN 5.1
+                 ELSE 0
+                 END ;;
+    value_format_name: decimal_4
+  }
+
+  measure: sl_total_ops_indirect_using_ratio {
+    label: "SL Total Ops - Indirect - Using Ratio"
+    type: number
+    sql: ${sl_total_ops} * ${indirect_total_ftes} * 1.02638
+          + CASE WHEN ${t_activity_year} = 2017 THEN 3
+                 WHEN ${t_activity_year} = 2018 THEN -1.1
+                 ELSE 0
+                 END ;;
+    value_format_name: decimal_4
+  }
+
+  measure: sl_total_ops {
+    label: "SL Total Ops"
+    description: "Requires Day of Operations and Start Date"
+    type: number
+    sql: ${sl_production_ops} + ${sl_sf_ops} * ${aa_sf_growth_factor_by_year}
+          + ${include_function_subfunction.avg_others_operators} ;;
+    value_format_name: decimal_1
+  }
+
+  measure: direct_total_ftes {
+    label: "Direct/Total FTEs"
+    type: number
+    sql: ${t_direct_ftes} / (${t_indirect_ftes} + ${t_direct_ftes}) ;;
+    value_format_name: decimal_1
+  }
+
+  measure: indirect_total_ftes {
+    label: "Indirect/Total FTEs"
+    type: number
+    sql: ${t_indirect_ftes} / (${t_direct_ftes} + ${t_indirect_ftes}) ;;
+    value_format_name: decimal_1
   }
 
   measure: sl_production_ops {
@@ -585,18 +621,35 @@ view: rpt_staffing_production {
     value_format_name: decimal_3
   }
 
-  measure: direct_total_ftes {
-    label: "Direct/Total FTEs"
+  measure: aa_sf_growth_factor_by_year {
+    label: "AA SF Growth Factor by Year"
     type: number
-    sql: ${t_direct_ftes} / (${t_indirect_ftes} + ${t_direct_ftes}) ;;
-    value_format_name: decimal_0
+    sql: CASE WHEN ${t_activity_year} = 2017 THEN 1
+              WHEN ${t_activity_year} = 2018 THEN ${aa_growth_factor_2018}
+              WHEN ${t_activity_year} = 2019 THEN ${aa_growth_factor_2019}
+              WHEN ${t_activity_year} = 2020 THEN ${aa_growth_factor_2020}
+              WHEN ${t_activity_year} = 2021 THEN ${aa_growth_factor_2021}
+              WHEN ${t_activity_year} = 2022 THEN ${aa_growth_factor_2022}
+              ELSE 1
+              END ;;
   }
 
-  measure: indirect_total_ftes {
-    label: "Indirect/Total FTEs"
+  measure: t_direct_ftes {
+    label: "T Direct FTEs"
     type: number
-    sql: ${t_indirect_ftes} / (${t_direct_ftes} + ${t_indirect_ftes}) ;;
-    value_format_name: decimal_0
+    sql: CASE WHEN ${labour} = 'Direct' THEN ${t_v_ftes}
+              ELSE 0
+              END ;;
+    value_format_name: decimal_1
+  }
+
+  measure: t_indirect_ftes {
+    label: "T Indirect FTEs"
+    type: number
+    sql: CASE WHEN ${labour} = 'Indirect' THEN ${t_v_ftes}
+              ELSE 0
+              END ;;
+    value_format_name: decimal_1
   }
 
   measure: t_beta {
@@ -629,6 +682,109 @@ view: rpt_staffing_production {
             WHEN {% parameter param_coverage %} = 0.99 then 2.326
             ELSE 0
             END ;;
+  }
+
+  measure: t_v_ftes_net_of_month {
+    label: "T V FTEs - Net of Month Days"
+    type: number
+    sql: (${total_t_v_person_hours}/${rpt_staffing_resource_hrs.v_productive_shift_hours})
+          * ${rpt_staffing_resource_hrs.total_working_days_month} ;;
+    value_format_name: decimal_1
+  }
+
+  measure: aa_growth_factor_2018 {
+    label: "AA Growth Factor 2018"
+    type: number
+    sql: ${aa_prd_fte_hrs_2018}/${aa_prd_fte_hrs_2017} ;;
+    value_format_name: percent_1
+  }
+
+  measure: aa_growth_factor_2019 {
+    label: "AA Growth Factor 2019"
+    type: number
+    sql: ${aa_prd_fte_hrs_2019}/${aa_prd_fte_hrs_2017} ;;
+    value_format_name: percent_1
+  }
+
+  measure: aa_growth_factor_2020 {
+    label: "AA Growth Factor 2020"
+    type: number
+    sql: ${aa_prd_fte_hrs_2020}/${aa_prd_fte_hrs_2017} ;;
+    value_format_name: percent_1
+  }
+
+  measure: aa_growth_factor_2021 {
+    label: "AA Growth Factor 2021"
+    type: number
+    sql: ${aa_prd_fte_hrs_2021}/${aa_prd_fte_hrs_2017} ;;
+    value_format_name: percent_1
+  }
+
+  measure: aa_growth_factor_2022 {
+    label: "AA Growth Factor 2022"
+    type: number
+    sql: ${aa_prd_fte_hrs_2022}/${aa_prd_fte_hrs_2017} ;;
+    value_format_name: percent_1
+  }
+
+  measure: aa_prd_fte_hrs_2018 {
+    label: "AA Prd FTE Hrs in 2018"
+    type: number
+    sql: CASE WHEN ${activity_year} = 2018
+                THEN AVG(${exclude_production_fields.ftes})/1200 + ${beta} * STDEV(${exclude_production_fields.ftes}) - 3.6
+              ELSE 0
+              END ;;
+    value_format_name: decimal_1
+  }
+
+  measure: aa_prd_fte_hrs_2017 {
+    label: "AA Prd FTE Hrs in 2017"
+    type: number
+    sql: CASE WHEN ${activity_year} = 2017
+                THEN AVG(${exclude_production_fields.ftes})/1200 + ${beta} * STDEV(${exclude_production_fields.ftes})
+              ELSE 0
+              END ;;
+    value_format_name: decimal_1
+  }
+
+  measure: aa_prd_fte_hrs_2019 {
+    label: "AA Prd FTE Hrs in 2019"
+    type: number
+    sql: CASE WHEN ${activity_year} = 2019
+                THEN AVG(${exclude_production_fields.ftes})/1200 + ${beta} * STDEV(${exclude_production_fields.ftes})
+              ELSE 0
+              END ;;
+    value_format_name: decimal_1
+  }
+
+  measure: aa_prd_fte_hrs_2020 {
+    label: "AA Prd FTE Hrs in 2020"
+    type: number
+    sql: CASE WHEN ${activity_year} = 2020
+                THEN AVG(${exclude_production_fields.ftes})/1200 + ${beta} * STDEV(${exclude_production_fields.ftes})
+              ELSE 0
+              END ;;
+    value_format_name: decimal_1
+  }
+
+  measure: aa_prd_fte_hrs_2021 {
+    label: "AA Prd FTE Hrs in 2021"
+    type: number
+    sql: CASE WHEN ${activity_year} = 2021
+                THEN AVG(${exclude_production_fields.ftes})/1200 + ${beta} * STDEV(${exclude_production_fields.ftes})
+              ELSE 0
+              END ;;
+    value_format_name: decimal_1
+  }
+
+  measure: aa_prd_fte_hrs_2022 {
+    label: "AA Prd FTE Hrs in 2022"
+    type: number
+    sql: CASE WHEN ${activity_year} = 2022
+                THEN AVG(${exclude_production_fields.ftes})
+              ELSE 0
+              END ;;
+    value_format_name: decimal_1
   }
 
   measure: beta {
@@ -665,13 +821,13 @@ view: rpt_staffing_production {
   measure: ftes {
     label: "FTEs"
     type: number
-    sql: (${total_person_hours} *
+    sql: (${total_person_hours_v} *
             CASE WHEN ${parameter} = 'eBR' THEN {% parameter param_electronic_br %}
                  WHEN ${parameter} = 'Paper' THEN (1- {% parameter param_electronic_br %})
                  ELSE 1
                  END)
           / ${rpt_staffing_resource_hrs.v_productive_shift_time} ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: total_person_hours_v {
@@ -695,14 +851,23 @@ view: rpt_staffing_production {
 
   measure: para_idle_time_calc_v {
     type: number
-    sql: (1+ % parameter param_idle_time %}) * ISNULL(${total_average_of_idle_time}, 0) ;;
-    value_format_name: decimal_0
+    sql: (1+ {% parameter param_idle_time %}) * ISNULL(${total_average_of_idle_time}, 0) ;;
+    value_format_name: decimal_1
+  }
+
+  measure: indirect_direct_ratio_display {
+    label: "Indirect/Direct Ratio - Display"
+    type: number
+    sql: (${rpt_staffing_resource_hrs.sl_total_supervisors_indirect}
+            + ${sl_total_ops_indirect_using_ratio} + ${include_function_subfunction.mgmt_count})
+          / (${rpt_staffing_resource_hrs.sl_total_supervisors_direct}
+            + ${sl_total_ops_direct_using_ratio}) ;;
   }
 
   measure: rework_rate_d {
     type: number
     sql: ISNULL(${total_average_of_rework_rate}, 0) ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: para_return_excess_rm_v {
@@ -711,6 +876,6 @@ view: rpt_staffing_production {
                 THEN ${total_t_v_ftes} * (1+ {% parameter param_returned_excess_rm %}
               ELSE 0
               END ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 }

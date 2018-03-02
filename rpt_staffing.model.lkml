@@ -74,6 +74,29 @@ explore: rpt_staffing_production {
     type: left_outer
     relationship: many_to_one
   }
+
+  join: include_subfunction_testinggroup {
+    view_label: "Rpt Staffing Production"
+    sql_on: ${rpt_staffing_production.join_identifier_resources}
+            = ${include_subfunction_testinggroup.join_identifier_resources};;
+    type: left_outer
+    relationship: many_to_one
+  }
+
+  join: exclude_production_fields {
+    view_label: "Rpt Staffing Production"
+    sql_on: ${exclude_production_fields.number} = ${rpt_staffing_production.id} ;;
+    type: left_outer
+    relationship: many_to_one
+  }
 }
 
 explore: rpt_staffing_schedule {}
+
+# explore: rpt_staffing_resource_hrs {
+#  join: rpt_staffing_production {
+#    sql_on: ${rpt_staffing_production.join_identifier_resources}
+#      = ${rpt_staffing_resource_hrs.join_identifier_resources} ;;
+#    type: left_outer
+#  }
+#}

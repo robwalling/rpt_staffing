@@ -128,7 +128,7 @@ view: rpt_staffing_resource_hrs {
     default_value: "Sups. by SOC"
     type: string
     allowed_value: {label: "Sups. by SOC" value: "Sups. by SOC"}
-    allowed_value: {label: "Sups. by Shift" value: "Sups. by Shift"}
+    allowed_value: {label: "Sups. by Shifts" value: "Sups. by Shifts"}
   }
 
   parameter: param_rework {
@@ -296,7 +296,7 @@ view: rpt_staffing_resource_hrs {
 #     sql: ((${total_shift_duration} -
 #             (${v_gowning_hours} + ${v_break_hours} + ${v_meeting_hours} + ${v_training_hours})) *
 #           (${total_working_days_year} - ${v_vacations}) / ${total_working_days_year}) ;;
-#     value_format_name: decimal_0
+#     value_format_name: decimal_1
 #   }
 
   dimension: v_productive_shift_hours {
@@ -304,61 +304,61 @@ view: rpt_staffing_resource_hrs {
     sql: ((${shift_duration} -
             (${v_gowning_hours} + ${v_break_hours} + ${v_meeting_hours} + ${v_training_hours})) *
           (${working_days_year} - ${v_vacations}) / ${working_days_year}) ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: total_shift_duration {
     type: sum
     sql: ${shift_duration} ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
 #   measure: v_gowning_hours {
 #     type: sum
 #     sql: ${gowning_time} * (1+ {% parameter param_gowning %}) ;;
-#     value_format_name: decimal_0
+#     value_format_name: decimal_1
 #   }
 
   dimension: v_gowning_hours {
     type: number
     sql: ${gowning_time} * (1+ {% parameter param_gowning %}) ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
 #   measure: v_break_hours {
 #     type: sum
 #     sql: ${break_time} * (1+ {% parameter param_break %}) ;;
-#     value_format_name: decimal_0
+#     value_format_name: decimal_1
 #   }
 
   dimension: v_break_hours {
     type: number
     sql: ${break_time} * (1+ {% parameter param_break %}) ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
 #   measure: v_meeting_hours {
 #     type: sum
 #     sql: ${meeting_time} * (1+ {% parameter param_meeting %}) ;;
-#     value_format_name: decimal_0
+#     value_format_name: decimal_1
 #   }
 
   dimension: v_meeting_hours {
     type: number
     sql: ${meeting_time} * (1+ {% parameter param_meeting %}) ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
 #   measure: v_training_hours {
 #     type: sum
 #     sql: ${training} * (1+ {% parameter param_training %}) ;;
-#     value_format_name: decimal_0
+#     value_format_name: decimal_1
 #   }
 
   dimension: v_training_hours {
     type: number
     sql: ${training} * (1+ {% parameter param_training %}) ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: total_working_days_year {
@@ -369,44 +369,44 @@ view: rpt_staffing_resource_hrs {
 #   measure: v_vacations {
 #     type: sum
 #     sql: ${vacation_holidays} * (1+ {% parameter param_vacations %}) ;;
-#     value_format_name: decimal_0
+#     value_format_name: decimal_1
 #   }
 
   dimension: v_vacations {
     type: number
     sql: ${vacation_holidays} * (1+ {% parameter param_vacations %}) ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: total_gowning_time {
     type: sum
     sql: ${gowning_time} ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: total_break_time {
     type: sum
     sql: ${break_time} ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: total_meeting_time {
     type: sum
     sql: ${meeting_time} ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: total_training {
     type: sum
     sql: ${training} ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: total_vacation_holidays {
     label: "Total Vacation + Holidays"
     type: sum
     sql: ${vacation_holidays} ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: avg_staff_efficiency_future {
@@ -426,7 +426,31 @@ view: rpt_staffing_resource_hrs {
     sql: ((${total_shift_duration} -
             (${total_break_time} + ${total_meeting_time} + ${total_gowning_time} + ${total_training})) *
           (${total_working_days_year} - ${total_vacation_holidays})) / ${total_working_days_year} ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
+  }
+
+  measure: sl_total_supervisors_direct {
+    label: "SL Total Supervisors - Direct"
+    type: number
+    sql: ${sl_total_supervisors} * ${rpt_staffing_production.direct_total_ftes} * 0.94701 ;;
+    value_format_name: decimal_4
+  }
+
+  measure: sl_total_supervisors_indirect {
+    label: "SL Total Supervisors - Indirect"
+    type: number
+    sql: ${sl_total_supervisors} * ${rpt_staffing_production.indirect_total_ftes} * 1.02638 ;;
+    value_format_name: decimal_4
+  }
+
+  measure: sl_total_supervisors {
+    label: "SL Total Supervisors"
+    type: number
+    sql: CASE WHEN {% parameter param_soc %} = 'Sups. by Shifts'
+                THEN ${include_function_subfunction_testinggroup.sups_by_shifts_v}
+              ELSE CAST(${rpt_staffing_production.sl_total_ops} as int)
+                    / ${include_subfunction_testinggroup.t_soc_v}
+              END ;;
   }
 
   measure: total_sups_per_shift {
@@ -443,31 +467,31 @@ view: rpt_staffing_resource_hrs {
   measure: variable_break_time {
     type: number
     sql: ${total_break_time} * (1+ {% parameter param_break %}) ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: variable_gowning_time {
     type: number
     sql: ${total_gowning_time} * (1+ {% parameter param_gowning %}) ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: variable_meeting_time {
     type: number
     sql: ${total_meeting_time} * (1+ {% parameter param_meeting %}) ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: variable_training_hours {
     type: number
     sql: ${total_training} * (1+ {% parameter param_training %}) ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: variable_vacations {
     type: number
     sql: ${total_vacation_holidays} * (1+ {% parameter param_vacations %}) ;;
-    value_format_name: decimal_0
+    value_format_name: decimal_1
   }
 
   measure: v_productive_shift_time {
@@ -478,4 +502,13 @@ view: rpt_staffing_resource_hrs {
           / ${total_working_days_year} ;;
     value_format_name: decimal_3
   }
+
+  measure: sl_direct_sups {
+    label: "SL Direct Sups."
+    type: number
+    sql: ${sl_total_supervisors} * ${rpt_staffing_production.direct_total_ftes} * 0.94701 ;;
+    value_format_name: decimal_4
+  }
+
+
 }

@@ -1,6 +1,7 @@
 view: include_function_subfunction {
   derived_table: {
     sql: select r."Function", r."Sub-function", AVG("Manager") as dim_avg_manager
+          , SUM(m."Others") as dim_others, SUM(m."Operators") as dim_operators
       from rpt_staffing_resource_hrs r
       join rpt_staffing_production p
         on r."Join Identifier - Resources" = p."Join Identifier - Resources"
@@ -39,11 +40,29 @@ view: include_function_subfunction {
     hidden: yes
   }
 
+  dimension: dim_others {
+    type: number
+    sql: ${TABLE}.dim_others ;;
+    hidden: yes
+  }
+
+  dimension: dim_operators {
+    type: number
+    sql: ${TABLE}.dim_operators ;;
+    hidden: yes
+  }
+
 ###### Measures ######
   measure: mgmt_count {
     type: sum
     sql: ${dim_avg_manager} ;;
     value_format_name: decimal_0
+  }
+
+  measure: avg_others_operators {
+    type: average
+    sql: ${dim_others} + ${dim_operators} ;;
+    hidden: yes
   }
 
   set: detail {
