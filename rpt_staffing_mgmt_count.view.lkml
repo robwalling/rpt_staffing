@@ -19,8 +19,10 @@ view: rpt_staffing_mgmt_count {
   }
 
   dimension: join_identifier_mgmt {
+    primary_key: yes
     type: string
     sql: ${TABLE}."Join Identifier - Mgmt" ;;
+    hidden: yes
   }
 
   dimension: manager {
@@ -62,5 +64,12 @@ view: rpt_staffing_mgmt_count {
   measure: total_operators {
     type: sum
     sql: ${operators} ;;
+  }
+
+# ------ Non-DT version ------
+  measure: avg_others_operators {
+    type: average
+    sql: ${others} + ${operators} ;;
+    hidden: yes
   }
 }

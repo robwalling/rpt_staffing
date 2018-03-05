@@ -195,6 +195,7 @@ view: rpt_staffing_resource_hrs {
     type: string
     primary_key: yes                # Added by Rebecca
     sql: ${TABLE}."Join Identifier - Resources" ;;
+    hidden: yes
   }
 
   dimension: meeting_time {
@@ -412,13 +413,15 @@ view: rpt_staffing_resource_hrs {
   measure: avg_staff_efficiency_future {
     label: "AVG(Staff Efficiency - Future)"
     type: number
-    sql: ${v_productive_shift_hours} / ${total_shift_duration} ;;
+    sql: SUM(${v_productive_shift_hours}) / ${total_shift_duration} ;;
+    value_format_name: percent_1
   }
 
   measure: avg_staff_efficiency_current {
     label: "AVG(Staff Efficiency - Current)"
     type: number
     sql: ${d_productive_shift_hours} / ${total_shift_duration} ;;
+    value_format_name: percent_1
   }
 
   measure: d_productive_shift_hours {
@@ -433,25 +436,45 @@ view: rpt_staffing_resource_hrs {
     label: "SL Total Supervisors - Direct"
     type: number
     sql: ${sl_total_supervisors} * ${rpt_staffing_production.direct_total_ftes} * 0.94701 ;;
-    value_format_name: decimal_4
+    value_format_name: decimal_1
   }
 
   measure: sl_total_supervisors_indirect {
     label: "SL Total Supervisors - Indirect"
     type: number
     sql: ${sl_total_supervisors} * ${rpt_staffing_production.indirect_total_ftes} * 1.02638 ;;
-    value_format_name: decimal_4
+    value_format_name: decimal_1
   }
 
+# ------ Edited not to use the DTs include_function_subfunction_testinggroup ------
+# ------ and include_subfunction_testinggroup -------------------------------------
   measure: sl_total_supervisors {
     label: "SL Total Supervisors"
     type: number
     sql: CASE WHEN {% parameter param_soc %} = 'Sups. by Shifts'
-                THEN ${include_function_subfunction_testinggroup.sups_by_shifts_v}
+                THEN ${sups_by_shifts_v}
               ELSE CAST(${rpt_staffing_production.sl_total_ops} as int)
-                    / ${include_subfunction_testinggroup.t_soc_v}
+                    / ${t_soc_v}
               END ;;
+    value_format_name: decimal_1
   }
+# ---------------------------------------------------------------------------------
+
+# ------ Non-DT versions ------
+  measure: sups_by_shifts_v {
+    label: "Sups. by Shifts V"
+    type: number
+    sql: AVG(${sups_per_shift} * ${number_of_shifts})
+          * (1+ {% parameter rpt_staffing_production.param_span_of_control %}) ;;
+  }
+
+  measure: t_soc_v {
+    label: "T SOC V"
+    type: number
+    sql: (AVG(${sup_soc} * ${hc_opers_only}) / AVG(${hc_opers_only}))
+          * (1+ {% parameter rpt_staffing_production.param_span_of_control %}) ;;
+  }
+# -----------------------------
 
   measure: total_sups_per_shift {
     type: sum
@@ -494,7 +517,16 @@ view: rpt_staffing_resource_hrs {
     value_format_name: decimal_1
   }
 
-  measure: v_productive_shift_time {
+  dimension: v_productive_shift_time {
+    type: number
+    sql: ((${shift_duration} -
+            (${break_time} * (1+ {% parameter param_break %})) + (${gowning_time} * (1+ {% parameter param_gowning %}))
+              + (${meeting_time} * (1+ {% parameter param_meeting %})) + (${training} * (1+ {% parameter param_training %})))
+            * (${working_days_year} - (${vacation_holidays} * (1+ {% parameter param_vacations %}))))
+          / ${working_days_year} ;;
+  }
+
+  measure: total_v_productive_shift_time {
     type: number
     sql: ((${total_shift_duration} - (${variable_break_time} + ${variable_gowning_time}
               + ${variable_meeting_time} + ${variable_training_hours})) *
@@ -509,6 +541,5 @@ view: rpt_staffing_resource_hrs {
     sql: ${sl_total_supervisors} * ${rpt_staffing_production.direct_total_ftes} * 0.94701 ;;
     value_format_name: decimal_4
   }
-
 
 }

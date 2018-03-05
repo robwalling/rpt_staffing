@@ -11,10 +11,6 @@ explore: rpt_staffing_mgmt_count {}
 
 
 explore: rpt_staffing_production {
-  fields: [ALL_FIELDS*,
-    -rpt_staffing_schedule.join_identifier_for_schd,
-    -rpt_staffing_resource_hrs.join_identifier_resources,
-    -rpt_staffing_mgmt_count.join_identifier_mgmt]
 
   join: rpt_staffing_schedule {
     sql_on: ${rpt_staffing_production.join_identifier_for_schd}
@@ -45,19 +41,19 @@ explore: rpt_staffing_production {
     relationship: one_to_one
   }
 
-  join: include_t_activity_date {
-    view_label: "Rpt Staffing Production"
-    sql_on: ${rpt_staffing_production.t_activity_date} = ${include_t_activity_date.t_activity_date} ;;
-    type: left_outer
-    relationship: many_to_many
-  }
+#  join: include_t_activity_date {
+#    view_label: "Rpt Staffing Production"
+#    sql_on: ${rpt_staffing_production.t_activity_date} = ${include_t_activity_date.t_activity_date} ;;
+#    type: left_outer
+#    relationship: many_to_many
+#  }
 
-  join: include_t_activity_month {
-    view_label: "Rpt Staffing Production"
-    sql_on: ${rpt_staffing_production.t_activity_month} = ${include_t_activity_month.t_activity_month} ;;
-    type: left_outer
-    relationship: many_to_one
-  }
+#  join: include_t_activity_month {
+#    view_label: "Rpt Staffing Production"
+#    sql_on: ${rpt_staffing_production.t_activity_month} = ${include_t_activity_month.t_activity_month} ;;
+#    type: left_outer
+#    relationship: many_to_one
+#  }
 
   join: include_function_subfunction {
     view_label: "Rpt Staffing Production"

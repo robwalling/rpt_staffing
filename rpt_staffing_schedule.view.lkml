@@ -5,6 +5,7 @@ view: rpt_staffing_schedule {
     type: number
     primary_key: yes            # Added by Rebecca
     sql: ${TABLE}."#" ;;
+    hidden: yes
   }
 
   dimension: asset {
@@ -16,6 +17,7 @@ view: rpt_staffing_schedule {
   dimension: join_identifier_for_schd {
     type: string
     sql: ${TABLE}."Join Identifier for Schd" ;;
+    hidden: yes
   }
 
   dimension: manufacturing_activity {
